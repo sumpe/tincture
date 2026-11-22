@@ -1,4 +1,4 @@
-// Polyverb, Polish: the game and the tables. Shared helpers are in ../trainer.js.
+// Polyverb, Polish: the game and the tables. Shared helpers are in ../js/trainer.js.
 // Each question asks for one form of a regular verb: a tense or mood, a person and, where it matters, a gender.
 
 // ---- Words on the page ----

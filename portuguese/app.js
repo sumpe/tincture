@@ -1,4 +1,4 @@
-// Polyverb, Portuguese: the game and the tables. Shared helpers are in ../trainer.js.
+// Polyverb, Portuguese: the game and the tables. Shared helpers are in ../js/trainer.js.
 // Each question asks for one form: a verb, a tense and a person. The tables set each verb beside its Spanish.
 
 // ---- Words on the page ----

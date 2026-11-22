@@ -1,4 +1,4 @@
-// Polyverb, Swedish: the game and the tables. Shared helpers are in ../trainer.js.
+// Polyverb, Swedish: the game and the tables. Shared helpers are in ../js/trainer.js.
 // Each question shows an infinitive; the player types its three principal parts.
 
 // ---- Words on the page ----
