@@ -1,0 +1,121 @@
+/* Polynoun trainers: everything the language trainers share. Loaded after site.css. */
+:root{--on-fill:#fff}
+
+/* Masthead */
+.mast .in{max-width:540px;margin:0 auto;padding:24px 20px 0}
+h1{margin:0;font-weight:600;font-size:clamp(1.7rem,6.6vw,1.95rem);line-height:1.12;letter-spacing:-.01em;text-wrap:balance}
+.sub{margin:8px 0 0;max-width:36em;color:var(--muted);text-wrap:pretty}
+.tabs{display:flex;margin:18px 0 0;border-bottom:1px solid var(--line)}
+.tabs a{flex:1 1 0;display:inline-flex;align-items:center;justify-content:center;min-height:44px;margin-bottom:-1px;border-bottom:2px solid transparent;color:var(--muted);text-decoration:none}
+.tabs a[aria-current]{color:var(--ink);font-weight:600;border-bottom-color:var(--accent)}
+
+main{max-width:540px;margin:0 auto;padding:22px 20px 64px}
+body.wide .nav .in,body.wide .mast .in,body.wide main{max-width:1100px}
+
+/* Order slip: the one raised surface, used for the question */
+#quiz{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:22px 20px 24px}
+
+/* Form controls */
+.lbl{display:block;margin:0 0 10px;color:var(--muted);font-style:italic}
+.seg{display:flex;flex-wrap:wrap;gap:3px;padding:3px;margin:0 0 22px;background:var(--sunk);border-radius:8px}
+.seg button{flex:1 1 auto;min-height:44px;padding:8px;border:0;border-radius:6px;background:transparent;white-space:nowrap;font-variant-numeric:lining-nums tabular-nums;transition:background-color .15s,color .15s}
+.seg button.on{background:var(--card);color:var(--accent);font-weight:600;box-shadow:0 0 0 1px var(--edge)}
+.seg.tight{margin-bottom:10px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 22px}
+.chips button{flex:0 0 auto;min-height:44px;padding:8px 12px;border:1px solid var(--edge);border-radius:6px;background:transparent;transition:background-color .15s,border-color .15s,color .15s}
+/* Selected: a light tint of the page's accent, not a solid fill, so it doesn't outweigh the rest */
+.chips button.on{background:var(--tint);border-color:var(--accent);color:var(--accent);font-weight:600}
+.chips.tight{margin-bottom:10px}
+.hint{margin:0 0 20px;color:var(--muted);font-size:.9rem;line-height:1.55;text-wrap:pretty}
+.hint .n{font-style:italic;white-space:nowrap}
+
+.primary,.ghost{display:flex;align-items:center;justify-content:center;width:100%;min-height:52px;padding:12px 20px;border-radius:6px;font-weight:600;font-size:1.06rem;letter-spacing:.01em;text-decoration:none;transition:background-color .15s}
+.primary{border:0;background:var(--fill);color:var(--on-fill)}
+.ghost{margin-top:10px;border:1px solid var(--edge);background:transparent;color:var(--ink)}
+.link{color:var(--accent);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px}
+.back{display:inline-flex;align-items:center;min-height:44px}
+#start{margin-top:22px}
+
+/* Quiz */
+.top{display:flex;justify-content:space-between;gap:12px;margin-bottom:10px;color:var(--muted);font-style:italic;font-size:.94rem;font-variant-numeric:lining-nums}
+.bar{height:3px;margin-bottom:24px;background:var(--sunk);border-radius:2px;overflow:hidden}
+#fill{height:100%;width:0;background:var(--accent);transition:width .3s ease-out}
+.ask{margin:0 0 6px;color:var(--muted);font-style:italic;text-align:center}
+.word{font-weight:600;font-size:clamp(2.4rem,11vw,3.1rem);line-height:1.08;letter-spacing:-.015em;text-align:center;overflow-wrap:anywhere}
+/* The question hugs its words, so a hover shows English only over the text itself */
+.ask,.word,.case{width:fit-content;max-width:100%;margin-left:auto;margin-right:auto}
+.word .art{color:var(--muted);font-weight:400}
+.case{margin-top:10px;color:var(--tag);font-style:italic;font-size:1.12rem;line-height:1.3;text-align:center}
+.frame{margin:4px 0 0;text-align:center;font-size:1.3rem;line-height:1.3}
+.frame .blank{display:inline-block;width:3.2em;border-bottom:1.5px solid var(--edge);vertical-align:-2px}
+#ans{display:block;width:100%;min-height:58px;margin-top:22px;padding:10px 16px;border:1px solid var(--edge);border-radius:6px;background:var(--paper);font-size:1.6rem;line-height:1.2;text-align:center;transition:border-color .15s,box-shadow .15s,background-color .15s}
+#ans:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--ring)}
+#ans.ok{border-color:var(--ok);background:var(--okbg);box-shadow:none}
+#ans.bad{border-color:var(--bad);background:var(--badbg);box-shadow:none}
+.fb{margin:12px 0 0;padding:10px 14px 12px;border-radius:6px;font-size:1rem;line-height:1.4;text-align:center}
+.fb .fa{color:var(--ink);font-weight:600;font-size:1.3rem}
+.fb .k{display:block;margin-top:2px;color:var(--muted);font-style:italic;font-size:.9rem}
+.fb .rule{display:block;margin-top:6px;color:var(--ink);font-size:.97rem;text-wrap:pretty}
+.fb.ok{background:var(--okbg);color:var(--ok)}
+.fb.bad{background:var(--badbg);color:var(--bad)}
+/* The part of the answer that differs from the dictionary form */
+.end{color:var(--accent);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px}
+.fb .end{color:inherit}
+#go{margin-top:16px}
+/* Letters with diacritics, for keyboards that can't type them. Each page sets --keys, its column count. */
+.keys{display:grid;grid-template-columns:repeat(var(--keys,9),minmax(0,1fr));gap:4px;margin:10px 0 0}
+.keys button{min-height:38px;padding:0;border:1px solid var(--line);border-radius:5px;background:transparent;font-size:1.15rem;line-height:1;transition:background-color .15s,opacity .15s}
+.keys button:disabled{opacity:.35;cursor:default}
+@media (pointer:coarse){.keys button{min-height:44px}}
+
+/* Results */
+#done{padding-top:14px}
+#res{font-weight:400;font-size:clamp(3.4rem,15vw,4.4rem);line-height:1;letter-spacing:-.01em;color:var(--accent);font-variant-numeric:lining-nums}
+#pct{margin:8px 0 28px;color:var(--muted);font-style:italic}
+#misshead{margin:0 0 14px;color:var(--muted);font-style:italic}
+/* Review: each miss is the question, then what you wrote struck through beside the answer */
+#miss{width:100%;margin:0 0 32px;border-collapse:collapse;table-layout:fixed;background:none;font-size:1rem;line-height:1.3}
+#miss th,#miss td{position:static;max-width:none;padding:0 14px 0 0;background:none;color:inherit;font-style:normal;font-weight:400;white-space:normal;overflow-wrap:anywhere;text-align:left;vertical-align:baseline;border:0}
+#miss th:last-child,#miss td:last-child{padding-right:0}
+#miss thead th{width:50%;padding-bottom:6px;color:var(--muted);font-style:italic;font-size:.9rem;border-bottom:1px solid var(--edge)}
+#miss tbody th,#miss tbody td{padding-top:11px;padding-bottom:11px;border-bottom:1px solid var(--line)}
+#miss .yes{font-weight:600}
+#miss .no{display:block;color:var(--bad);text-decoration:line-through;text-decoration-thickness:1px}
+#miss .k{display:block;margin-top:2px;color:var(--muted);font-style:italic;font-size:.86rem}
+.or{color:var(--muted);font-style:italic;font-weight:400}
+
+/* Tables */
+#tbl-view .sub{margin:0 0 18px}
+.count{margin:0 0 10px;color:var(--muted);font-style:italic;font-size:.94rem}
+.tw{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:10px;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:separate;border-spacing:0;background:var(--card);font-size:1rem}
+th,td{padding:7px 12px;text-align:left;border-bottom:1px solid var(--line)}
+tbody tr:last-child td{border-bottom:0}
+#tbl thead th{color:var(--muted);font-weight:400;font-style:italic;font-size:.9rem;white-space:nowrap}
+#tbl td{white-space:nowrap}
+#tbl td:first-child{position:sticky;left:0;z-index:1;background:var(--card);font-weight:600}
+#tbl th:first-child{position:sticky;left:0;z-index:2;background:var(--card)}
+
+/* Compact layout while playing, so the question fits one screen */
+body.play .mast .in{padding-top:6px}
+body.play h1,body.play #sub{display:none}
+body.play .tabs{margin-top:4px}
+body.play main{padding-top:14px}
+body.play #quiz{padding:16px 18px 20px}
+body.play .bar{margin-bottom:16px}
+body.play #go{margin-top:12px}
+body.wide .foot{max-width:1060px}
+
+@media (max-width:400px){
+  .mast .in,main{padding-left:16px;padding-right:16px}
+  .seg button{padding:8px 4px}
+}
+@media (hover:hover){
+  .tabs a:hover{color:var(--ink)}
+  .seg button:not(.on):hover{background:var(--hover)}
+  .chips button:not(.on):hover{background:var(--hover);border-color:var(--muted)}
+  .primary:hover{background:var(--fill-hi)}
+  .ghost:hover{background:var(--hover)}
+  .keys button:not(:disabled):hover{background:var(--hover);border-color:var(--edge)}
+  .link:hover{text-decoration-thickness:2px}
+}
