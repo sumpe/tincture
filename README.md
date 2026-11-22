@@ -1,23 +1,23 @@
 # Piotrek's Polynoun Tincture
 
-Treinos de substantivos, irmão do [Polyverb](https://github.com/sumpe/polyverb), cada um numa só página.
+Substantivtrainer, Geschwister von [Polyverb](https://github.com/sumpe/polyverb), jeder auf einer einzigen Seite.
 
-- **Polaco** (`polish/index.html`): seis formas de 115 substantivos do dia a dia (nominativo plural, genitivo singular e plural, acusativo, locativo e instrumental), cada uma numa frase que a pede: *nie ma ___*, *myślę o ___*. Depois de cada resposta aparece a regra que a explica. Há ainda um treino só para o genitivo dos masculinos inanimados: *-a* ou *-u*?
-- **Sueco** (`swedish/index.html`): o plural, em quatro níveis consoante quão previsível ele é, e não quão difícil é a palavra: fácil, médio, difícil (metafonia e irregulares) e monossílabos (*-ar* ou *-er*?).
+- **Polnisch** (`polish/index.html`): sechs Formen von 115 Alltagssubstantiven (Nominativ Plural, Genitiv Singular und Plural, Akkusativ, Lokativ und Instrumental Singular), jede in einer Wendung, die sie verlangt: *nie ma ___*, *myślę o ___*. Nach jeder Antwort erscheint die Regel, die sie erklärt. Dazu kommt ein eigener Trainer für den Genitiv der unbelebten Maskulina: *-a* oder *-u*?
+- **Schwedisch** (`swedish/index.html`): der Plural, in vier Stufen danach, wie vorhersehbar er ist, und nicht danach, wie schwer das Wort ist: leicht, mittel, schwer (Umlaut und Unregelmäßiges) und einsilbige Wörter (*-ar* oder *-er*?).
 
-## Como usar
+## Benutzung
 
-Não é preciso instalar nada: abre o `index.html` num browser e escolhe uma língua.
+Es muss nichts installiert werden: einfach `index.html` im Browser öffnen und eine Sprache wählen.
 
-## Ficheiros
+## Dateien
 
-- `css/site.css`: as cores (claro e escuro), a tipografia, a barra de navegação e o rodapé, comuns a todas as páginas.
-- `css/trainer.css`: o que os treinos partilham (escolhas, cartão da pergunta, revisão, tabelas).
-- `js/trainer.js`: as funções que os treinos partilham (secções, botões de escolha, teclas de letras, a parte da forma que muda).
-- `js/gloss.js`: mostra a tradução inglesa de um texto quando se passa o rato por cima (só com rato; nunca em ecrãs táteis).
-- `<língua>/app.js`: o jogo e as tabelas de cada língua.
-- `swedish/nouns.js`: os substantivos suecos, o plural, o grupo e a dica de cada um, nos quatro níveis (`POOLS`).
-- `polish/nouns.js`: os substantivos polacos e as suas seis formas, e as regras que geram as notas (`rulesFor`).
-- `tests/index.html`: verifica os dados (por exemplo, que cada forma polaca regular segue a regra que a nota lhe atribui) e joga uma ronda de cada treino. Abre-o num browser servido por HTTP, não diretamente do disco, porque carrega as páginas em iframes.
+- `css/site.css`: die Farben (hell und dunkel), die Schrift, die Navigationsleiste und die Fußzeile, die alle Seiten teilen.
+- `css/trainer.css`: was die Trainer gemeinsam haben (Auswahlknöpfe, Fragekarte, Wiederholung, Tabellen).
+- `js/trainer.js`: die Funktionen, die die Trainer teilen (Abschnitte, Auswahlknöpfe, Buchstabentasten, die Markierung des Teils einer Form, der sich ändert).
+- `js/gloss.js`: zeigt die englische Übersetzung eines Textes, wenn man mit der Maus darüberfährt (nur mit Maus, nie auf Touchscreens).
+- `<Sprache>/app.js`: das Spiel und die Tabellen der jeweiligen Sprache.
+- `swedish/nouns.js`: die schwedischen Substantive mit Plural, Gruppe und Hinweis, in den vier Stufen (`POOLS`).
+- `polish/nouns.js`: die polnischen Substantive mit ihren sechs Formen und die Regeln, aus denen die Hinweise entstehen (`rulesFor`).
+- `tests/index.html`: prüft die Daten (zum Beispiel, dass jede regelmäßige polnische Form der Regel folgt, die ihr Hinweis nennt) und spielt in jedem Trainer eine Runde. Über HTTP öffnen, nicht direkt von der Festplatte, weil die Seiten in iframes geladen werden.
 
-Cada página acrescenta as suas próprias cores num bloco `<style>` e carrega, por esta ordem, `gloss.js`, `nouns.js`, `trainer.js` e `app.js`. Não há passo de compilação: os ficheiros são carregados com `<link>` e `<script src>` simples, por isso tudo funciona tanto aberto diretamente do disco como servido pelo GitHub Pages.
+Jede Seite ergänzt ihre eigenen Farben in einem `<style>`-Block und lädt in dieser Reihenfolge `gloss.js`, `nouns.js`, `trainer.js` und `app.js`. Es gibt keinen Build-Schritt: Die Dateien werden mit einfachen `<link>`- und `<script src>`-Tags geladen, deshalb funktioniert alles sowohl direkt von der Festplatte als auch über GitHub Pages.
