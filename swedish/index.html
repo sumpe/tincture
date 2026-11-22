@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Plural på svenska 🫎</title>
+<meta name="theme-color" content="#f7f3ec" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#19110c" media="(prefers-color-scheme: dark)">
+<link rel="stylesheet" href="../css/site.css">
+<link rel="stylesheet" href="../css/trainer.css">
+<style>
+:root{
+  --accent:#24587f;
+  --fill:#24587f;
+  --fill-hi:#1d4a6c;
+  --tint:#dfe8f0;
+  --ring:rgba(36,88,127,.22);
+  --tag:#24587f;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --accent:#8fb8d8;
+    --fill:#2f6a96;
+    --fill-hi:#3878a8;
+    --tint:#1e2d3a;
+    --ring:rgba(143,184,216,.25);
+    --tag:#8fb8d8;
+  }
+}
+:root[data-theme="dark"]{
+  --accent:#8fb8d8;
+  --fill:#2f6a96;
+  --fill-hi:#3878a8;
+  --tint:#1e2d3a;
+  --ring:rgba(143,184,216,.25);
+  --tag:#8fb8d8;
+}
+
+/* Swedish specifics */
+.keys{--keys:3;max-width:180px;margin:6px auto 0}
+#tbl td:first-child{min-width:9em}
+</style>
+</head>
+<body>
+<nav class="nav" aria-label="Polynoun"><div class="in">
+  <a class="brand" href="../index.html">Polynoun</a>
+  <div class="langs">
+    <a href="../polish/index.html" lang="pl" data-en="Polish"><span class="fl pl" aria-hidden="true"></span>Polski</a>
+    <a href="../swedish/index.html" lang="sv" aria-current="page" data-en="Swedish"><span class="fl sv" aria-hidden="true"></span>Svenska</a>
+  </div>
+</div></nav>
+<header class="mast"><div class="in">
+  <h1 data-en="Swedish Plurals">Plural på svenska&nbsp;🫎</h1>
+  <p class="sub" id="sub" data-en="The levels go by how predictable the plural is, not by how hard the word is. Å, ä and ö count.">Nivåerna går efter hur förutsägbar pluralen är, inte efter hur svårt ordet är. Å, ä och ö räknas.</p>
+  <nav class="tabs" aria-label="Avsnitt">
+    <a href="#game" id="tab-game" aria-current="page" data-en="Practice">Träning</a>
+    <a href="#tables" id="tab-tables" data-en="Tables">Tabeller</a>
+  </nav>
+</div></header>
+<main>
+  <section id="setup">
+    <span class="lbl" id="l-l" data-en="Level">Nivå</span>
+    <div class="seg tight" id="level" role="group" aria-labelledby="l-l">
+      <button data-v="easy" class="on" aria-pressed="true" data-en="Easy">Lätt</button>
+      <button data-v="medium" aria-pressed="false" data-en="Medium">Medel</button>
+      <button data-v="hard" aria-pressed="false" data-en="Hard">Svår</button>
+      <button data-v="short" aria-pressed="false" data-en="One syllable">Enstaviga</button>
+    </div>
+    <p class="hint" id="about" aria-live="polite"></p>
+    <span class="lbl" id="l-n" data-en="Number of words">Antal ord</span>
+    <div class="seg" id="count" role="group" aria-labelledby="l-n">
+      <button data-v="10" aria-pressed="false">10</button>
+      <button data-v="20" class="on" aria-pressed="true">20</button>
+      <button data-v="30" aria-pressed="false">30</button>
+      <button data-v="40" aria-pressed="false">40</button>
+      <button data-v="50" aria-pressed="false">50</button>
+    </div>
+    <button class="primary" id="start" data-en="Start">Börja</button>
+  </section>
+
+  <section id="quiz" hidden>
+    <div class="top"><span id="prog"></span><span id="score"></span></div>
+    <div class="bar"><div id="fill"></div></div>
+    <p class="ask" data-en="The plural of">Plural av</p>
+    <div class="word" id="word"></div>
+    <input id="ans" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Plural">
+    <div class="keys" id="keys" role="group" aria-label="Å, ä och ö"></div>
+    <div id="fb" class="fb" role="status" hidden></div>
+    <button class="primary" id="go">Kontrollera</button>
+  </section>
+
+  <section id="done" hidden>
+    <div id="res"></div>
+    <div id="pct"></div>
+    <p id="misshead" data-en="To review">Att repetera</p>
+    <table id="miss">
+      <thead><tr><th scope="col" data-en="singular">singular</th><th scope="col" data-en="plural">plural</th></tr></thead>
+    </table>
+    <button class="primary" id="again" data-en="Play again">Spela igen</button>
+    <button class="ghost" id="change" data-en="Change settings">Ändra inställningar</button>
+  </section>
+
+  <section id="tbl-view" hidden>
+    <p class="sub" data-en="Choose a plural ending. The nouns are in alphabetical order; hover over a singular for the English.">Välj en pluraländelse. Orden står i bokstavsordning.</p>
+    <div class="seg tight" id="tgroup" role="group" aria-label="Pluraländelse">
+      <button data-v="or" class="on" aria-pressed="true" data-en="Plural in -or">-or</button>
+      <button data-v="ar" aria-pressed="false" data-en="Plural in -ar">-ar</button>
+      <button data-v="er" aria-pressed="false" data-en="Plural in -er or -r">-er</button>
+      <button data-v="n" aria-pressed="false" data-en="Plural in -n">-n</button>
+      <button data-v="0" aria-pressed="false" data-en="No ending">Ingen</button>
+      <button data-v="x" aria-pressed="false" data-en="The rest: vowel changes and oddities">Övriga</button>
+    </div>
+    <p class="hint" id="tabout"></p>
+    <p class="count" id="tcount"></p>
+    <div class="tw"><table id="tbl"></table></div>
+    <a class="link back" href="#game" data-en="Back to the game">Tillbaka till spelet</a>
+  </section>
+</main>
+<footer class="foot">By Peter S</footer>
+
+<script src="../js/gloss.js"></script>
+<script src="nouns.js"></script>
+<script src="../js/trainer.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
