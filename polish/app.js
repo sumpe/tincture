@@ -1,179 +1,353 @@
 // Polyverb, Polish: the game and the tables. Shared helpers are in ../trainer.js.
+// Each question asks for one form of a regular verb: a tense or mood, a person and, where it matters, a gender.
 
-const T=["Czas teraźniejszy","Czas przeszły","Czas przyszły","Tryb przypuszczający"];
-const TS=["Teraźniejszy","Przeszły","Przyszły","Przypuszczający"];
-const PR=["ja","ty","on / ona / ono","my","wy","oni / one"];
-const GR="grupa z mężczyznami / same kobiety".split(" / ");
-const AUX=["będę","będziesz","będzie","będziemy","będziecie","będą"];
-const PAST=[[0,0,"łem","łbym"],[0,1,"łam","łabym"],[1,0,"łeś","łbyś"],[1,1,"łaś","łabyś"],[2,0,"ł","łby"],[2,1,"ła","łaby"],[2,2,"ło","łoby"],[3,0,"liśmy","libyśmy"],[3,1,"łyśmy","łybyśmy"],[4,0,"liście","libyście"],[4,1,"łyście","łybyście"],[5,0,"li","liby"],[5,1,"ły","łyby"]];
-const lab=(p,g)=>p===2?["on","ona","ono"][g]:PR[p]+" ("+(p<2?["mężczyzna","kobieta"][g]:GR[g])+")";
-// English for the hover slips (gloss.js)
-const T_EN=["Present tense","Past tense","Future tense","Conditional mood"];
-const TS_EN=["Present","Past","Future","Conditional"];
-const PR_EN=["I","you","he / she / it","we","you all","they"];
-// Grammatical gender: masculine / feminine in the singular; in the plural, masculine personal
-// (any group that includes a man) against non-masculine personal (everything else).
-const labEn=(p,g)=>p===2?["he","she","it"][g]:PR_EN[p]+" ("+(p<2?["masculine","feminine"][g]:["masculine personal","non-masculine personal"][g])+")";
-function conj(v){
-  const s=v.slice(0,-1);let pr;
-  if(v.endsWith("ować")){const b=v.slice(0,-4);pr=["uję","ujesz","uje","ujemy","ujecie","ują"].map(e=>b+e);}
-  else if(v.endsWith("ać"))pr=["m","sz","","my","cie","ją"].map(e=>s+e);
-  else{
-    const b=v.slice(0,-2),E=v.endsWith("yć")?["ę","ysz","y","ymy","ycie","ą"]:b.endsWith("l")?["ę","isz","i","imy","icie","ą"]:["ię","isz","i","imy","icie","ią"];
-    pr=E.map(e=>b+e);
+// ---- Words on the page ----
+
+const TENSES = ["Czas teraźniejszy", "Czas przeszły", "Czas przyszły", "Tryb przypuszczający"];
+const TENSES_EN = ["Present tense", "Past tense", "Future tense", "Conditional mood"];
+const TENSE_BUTTONS = ["Teraźniejszy", "Przeszły", "Przyszły", "Przypuszczający"];
+const TENSE_BUTTONS_EN = ["Present", "Past", "Future", "Conditional"];
+const PRESENT = 0, PAST = 1, FUTURE = 2, CONDITIONAL = 3;
+const TIMELINE_OF_TENSE = ["present", "past", "future", "conditional"];
+
+const PRONOUNS = ["ja", "ty", "on / ona / ono", "my", "wy", "oni / one"];
+const PRONOUNS_EN = ["I", "you", "he / she / it", "we", "you all", "they"];
+const THIRD_SINGULAR = 2;
+
+// In the past tense and the conditional the form depends on gender: masculine or feminine in
+// the singular (and neuter for "ono"); in the plural, masculine personal (any group that
+// includes a man) against non-masculine personal (everything else).
+function genderLabel(person, gender) {
+  if (person === THIRD_SINGULAR) return ["on", "ona", "ono"][gender];
+  const who = person < THIRD_SINGULAR ? ["mężczyzna", "kobieta"][gender] : ["grupa z mężczyznami", "same kobiety"][gender];
+  return `${PRONOUNS[person]} (${who})`;
+}
+function genderLabelEn(person, gender) {
+  if (person === THIRD_SINGULAR) return ["he", "she", "it"][gender];
+  const who = person < THIRD_SINGULAR ? ["masculine", "feminine"][gender] : ["masculine personal", "non-masculine personal"][gender];
+  return `${PRONOUNS_EN[person]} (${who})`;
+}
+
+// ---- Conjugation ----
+
+const FUTURE_AUXILIARY = ["będę", "będziesz", "będzie", "będziemy", "będziecie", "będą"];
+// Past and conditional endings, added to the infinitive without its final -ć: [person, gender, past, conditional]
+const PAST_ENDINGS = [
+  [0, 0, "łem", "łbym"], [0, 1, "łam", "łabym"],
+  [1, 0, "łeś", "łbyś"], [1, 1, "łaś", "łabyś"],
+  [2, 0, "ł", "łby"], [2, 1, "ła", "łaby"], [2, 2, "ło", "łoby"],
+  [3, 0, "liśmy", "libyśmy"], [3, 1, "łyśmy", "łybyśmy"],
+  [4, 0, "liście", "libyście"], [4, 1, "łyście", "łybyście"],
+  [5, 0, "li", "liby"], [5, 1, "ły", "łyby"]
+];
+const PAST_COLUMN = 2, CONDITIONAL_COLUMN = 3;
+
+function presentForms(verb) {
+  if (verb.endsWith("ować")) {
+    const stem = verb.slice(0, -4);
+    return ["uję", "ujesz", "uje", "ujemy", "ujecie", "ują"].map(ending => stem + ending);
   }
-  const fu=AUX.map((x,p)=>{
-    const l=p<3?[s+"ł",s+"ła"]:[s+"li",s+"ły"];
-    if(p===2)l.push(s+"ło");
-    return{p,w:PR[p],e:PR_EN[p],a:[x+" "+v].concat(l.map(y=>x+" "+y))};
+  if (verb.endsWith("ać")) {
+    const stem = verb.slice(0, -1);
+    return ["m", "sz", "", "my", "cie", "ją"].map(ending => stem + ending);
+  }
+  // -ić and -yć. After l the i drops out of the first person and the plural (palę, palą);
+  // elsewhere it stays (robię, robią).
+  const stem = verb.slice(0, -2);
+  const endings = verb.endsWith("yć") ? ["ę", "ysz", "y", "ymy", "ycie", "ą"]
+    : stem.endsWith("l") ? ["ę", "isz", "i", "imy", "icie", "ą"]
+    : ["ię", "isz", "i", "imy", "icie", "ią"];
+  return endings.map(ending => stem + ending);
+}
+
+// Every form of a verb, by tense: rows of { person, label, english, answers }.
+// A row has more than one answer only in the compound future: będę czytać, będę czytał, będę czytała.
+function conjugate(verb) {
+  const stem = verb.slice(0, -1);
+  const row = (person, label, english, answers) => ({ person, label, english, answers });
+
+  const present = presentForms(verb).map((form, person) => row(person, PRONOUNS[person], PRONOUNS_EN[person], [form]));
+  const future = FUTURE_AUXILIARY.map((auxiliary, person) => {
+    const participles = person < 3 ? [stem + "ł", stem + "ła"] : [stem + "li", stem + "ły"];
+    if (person === THIRD_SINGULAR) participles.push(stem + "ło");
+    const answers = [auxiliary + " " + verb, ...participles.map(participle => auxiliary + " " + participle)];
+    return row(person, PRONOUNS[person], PRONOUNS_EN[person], answers);
   });
-  const past=k=>PAST.map(r=>({p:r[0],w:lab(r[0],r[1]),e:labEn(r[0],r[1]),a:[s+r[k]]}));
-  return[pr.map((f,p)=>({p,w:PR[p],e:PR_EN[p],a:[f]})),past(2),fu,past(3)];
-}
-
-const IDX=Object.create(null);
-for(const c in V)V[c].forEach(v=>conj(v).forEach((rows,t)=>rows.forEach(r=>r.a.forEach(f=>{
-  const k=norm(f);(IDX[k]=IDX[k]||[]).push({v:v,t:t,w:r.w,e:r.e});
-}))));
-// Where a wrong answer really belongs: up to two {verb, tense, persons}, or none.
-// Forms of the verb that was asked win over look-alikes from other verbs.
-function info(g,c){
-  const m=IDX[g];if(!m)return null;
-  const k={};
-  m.forEach(x=>{const key=x.v+"|"+x.t;(k[key]=k[key]||{v:x.v,t:x.t,w:[],e:[]});k[key].w.push(x.w);k[key].e.push(x.e);});
-  let l=Object.values(k);const own=l.filter(x=>x.v===c.v);if(own.length)l=own;
-  return l.slice(0,2).map(x=>({same:x.v===c.v,v:x.v,t:x.t,w:x.w,e:x.e}));
-}
-// ...said in Polish, e.g. "czas przeszły · ja (kobieta)", and in English
-const infoPl=l=>l.map(x=>(x.same?"":x.v+", ")+T[x.t].toLowerCase()+" · "+x.w.join(", ")).join("; ");
-const infoEn=l=>l.map(x=>(x.same?"the ":"a form of "+x.v+" ("+GLOSS[x.v]+"), the ")+T_EN[x.t].toLowerCase()+" · "+x.e.join(", ")).join("; ");
-const alts=(node,a)=>a.forEach((x,k)=>{if(k)node.append(" ",en(el("span","or","lub"),"or")," ");node.append(x);});
-const KEYS="ą ć ę ł ń ó ś ź ż".split(" ");
-letterKeys(KEYS,()=>$("ans"));
-
-let n=20,cls="all",selT=[0,1,2,3],q=[],i=0,score=0,miss=[],phase="",sel=["czytać"];
-const REP=["czytać","kupować","robić","uczyć"];
-
-seg("seg",v=>{n=+v;});
-seg("cls",v=>{cls=v;});
-
-function toggles(box,labels,get,set,english){
-  const c=$(box);
-  labels.forEach((l,k)=>{
-    const b=document.createElement("button");b.textContent=l;if(english)b.dataset.en=english[k];
-    b.onclick=()=>{
-      const a=get(),on=a.includes(k);
-      if(on&&a.length===1)return;
-      set(on?a.filter(x=>x!==k):a.concat(k));
-      paint();
-    };
-    c.appendChild(b);
+  const byGender = column => PAST_ENDINGS.map(endings => {
+    const [person, gender] = endings;
+    return row(person, genderLabel(person, gender), genderLabelEn(person, gender), [stem + endings[column]]);
   });
-  function paint(){[...c.children].forEach((b,k)=>{const on=get().includes(k);b.classList.toggle("on",on);b.setAttribute("aria-pressed",String(on));});}
-  paint();
-  return paint;
-}
-toggles("tns",TS,()=>selT,a=>{selT=a;},TS_EN);
-const paintRep=toggles("vchips",REP,()=>sel.map(v=>REP.indexOf(v)),a=>{sel=a.sort((x,y)=>x-y).map(k=>REP[k]);buildTable();});
-
-function start(){
-  const ts=shuf(selT),cs=cls==="all"?["ac","ow","ic"]:[cls],bank={};
-  const tl=shuf(Array.from({length:n},(_,k)=>ts[k%ts.length])),cl=shuf(Array.from({length:n},(_,k)=>cs[k%cs.length]));
-  q=tl.map((t,k)=>{
-    const c=cl[k];if(!bank[c]||!bank[c].length)bank[c]=shuf(V[c]);
-    const v=bank[c].pop(),rows=conj(v)[t],r=rows[Math.floor(Math.random()*rows.length)];
-    return{v:v,t:t,p:r.p,w:r.w,e:r.e,a:r.a};
-  });
-  i=0;score=0;miss=[];
-  show("quiz");render();
+  return [present, byGender(PAST_COLUMN), future, byGender(CONDITIONAL_COLUMN)];
 }
 
-const TK=["pres","past","fut","cond"];
-function render(){
-  const c=q[i];phase="ask";
-  en($("prog"),"Question "+(i+1)+" of "+q.length).textContent="Pytanie "+(i+1)+" z "+q.length;
-  en($("score"),"Score "+score).textContent="Punkty "+score;
-  $("fill").style.width=(i/q.length*100)+"%";
-  en($("verb"),GLOSS[c.v]).textContent=c.v;
-  en($("tense"),T_EN[c.t]).textContent=T[c.t];
-  en($("who"),c.e).textContent=c.w;
-  $("tline").innerHTML=tline(TK[c.t]);
-  [...$("pgrid").children].forEach((d,k)=>d.classList.toggle("on",k===(c.p%3)*2+(c.p>=3?1:0)));
-  const a=$("ans");a.value="";a.readOnly=false;a.className="";keysOn(true);
-  $("fb").hidden=true;en($("go"),"Check").textContent="Sprawdź";
-  a.focus();
-}
+const CONJUGATIONS = new Map(Object.values(VERBS_BY_CLASS).flat().map(verb => [verb, conjugate(verb)]));
 
-function go(){
-  if(phase==="ask"){
-    const a=$("ans"),c=q[i],g=norm(a.value);
-    if(!g)return;
-    const ok=c.a.some(x=>norm(x)===g),inf=ok?"":info(g,c);
-    if(ok)score++;else miss.push({c:c,g:a.value.trim(),inf:inf});
-    a.readOnly=true;a.className=ok?"ok":"bad";keysOn(false);
-    const fb=$("fb");fb.hidden=false;fb.className="fb "+(ok?"ok":"bad");
-    const others=c.a.filter(x=>norm(x)!==g);
-    fb.textContent="";
-    if(ok){
-      fb.append(en(el("span",null,"Dobrze"),"Correct"));
-      if(others.length){const k=en(el("span","k","także "),"also accepted: "+others.join(", "));alts(k,others);fb.append(k);}
-    }else{
-      const b=el("span","fa");alts(b,c.a);fb.append(en(el("span",null,"Odpowiedź"),"Answer")," ",b);
-      if(inf)fb.append(en(el("span","k","„"+a.value.trim()+"” to "+infoPl(inf)),"“"+a.value.trim()+"” is "+infoEn(inf)));
+// ---- Where a wrong answer belongs ----
+
+// Every form of every verb, so a wrong answer can be traced to where it belongs.
+const FORMS = new Map(); // normalized form → [{ verb, tense, label, english }]
+for (const [verb, tenses] of CONJUGATIONS) {
+  tenses.forEach((rows, tense) => {
+    for (const { label, english, answers } of rows) {
+      for (const answer of answers) {
+        const key = normalizeAnswer(answer);
+        if (!FORMS.has(key)) FORMS.set(key, []);
+        FORMS.get(key).push({ verb, tense, label, english });
+      }
     }
-    en($("score"),"Score "+score).textContent="Punkty "+score;
-    $("fill").style.width=((i+1)/q.length*100)+"%";
-    const last=i===q.length-1;en($("go"),last?"See your score":"Next").textContent=last?"Zobacz wynik":"Dalej";
-    phase="review";
-  }else{
-    i++;
-    if(i<q.length)render();else finish();
+  });
+}
+
+// Up to two { verb, tense, labels, englishLabels, isAskedVerb }, or null.
+// Forms of the verb that was asked about win over look-alikes from other verbs.
+function identifyForm(typed, question) {
+  const found = FORMS.get(typed);
+  if (!found) return null;
+  const groups = new Map();
+  for (const { verb, tense, label, english } of found) {
+    const key = verb + "|" + tense;
+    if (!groups.has(key)) groups.set(key, { verb, tense, labels: [], englishLabels: [] });
+    groups.get(key).labels.push(label);
+    groups.get(key).englishLabels.push(english);
   }
+  let matches = [...groups.values()];
+  const ofAskedVerb = matches.filter(match => match.verb === question.verb);
+  if (ofAskedVerb.length) matches = ofAskedVerb;
+  return matches.slice(0, 2).map(match => ({ ...match, isAskedVerb: match.verb === question.verb }));
 }
 
-function finish(){
-  show("done");
-  $("res").textContent=score+" / "+q.length;
-  const pc=Math.round(score/q.length*100);
-  en($("pct"),pc+"% correct"+(miss.length?"":", no mistakes")).textContent=pc+"% poprawnych"+(miss.length?"":", bez błędów");
-  $("misshead").hidden=$("miss").hidden=!miss.length;
-  const L=$("miss");[...L.tBodies].forEach(b=>b.remove());
-  miss.forEach(m=>{
-    const c=m.c,b=L.createTBody(),h=el("th");
-    h.colSpan=2;h.scope="rowgroup";b.insertRow().append(h);
-    h.append(en(el("span","v",c.v),GLOSS[c.v]),en(el("span","k",TS[c.t].toLowerCase()+" · "+c.w),TS_EN[c.t].toLowerCase()+" · "+c.e));
-    const r=b.insertRow(),w=r.insertCell();w.append(el("span","no",m.g));
-    if(m.inf){w.className="real";w.append(en(el("span","k","to "+infoPl(m.inf)),"is "+infoEn(m.inf)));}
-    const a=r.insertCell();a.className="yes";a.textContent=c.a[0];
-  });
+// The matches said in Polish, "czas przeszły · ja (kobieta)", and in English
+function describeInPolish(matches) {
+  return matches.map(match =>
+    (match.isAskedVerb ? "" : match.verb + ", ") + TENSES[match.tense].toLowerCase() + " · " + match.labels.join(", ")
+  ).join("; ");
 }
 
-function buildTable(){
-  paintRep();
-  const vs=sel,tab=$("tbl"),cj=vs.map(conj);
-  tab.textContent="";tab.style.minWidth=(170+vs.length*150)+"px";
-  const h=tab.createTHead().insertRow();
-  [""].concat(vs).forEach((x,k)=>{
-    const th=document.createElement("th");th.textContent=x;if(k)th.className="vh";h.appendChild(th);
+function describeInEnglish(matches) {
+  return matches.map(match =>
+    (match.isAskedVerb ? "the " : `a form of ${match.verb} (${ENGLISH[match.verb]}), the `)
+    + TENSES_EN[match.tense].toLowerCase() + " · " + match.englishLabels.join(", ")
+  ).join("; ");
+}
+
+// ---- The page ----
+
+const answerInput = byId("ans"), feedback = byId("fb"), mainButton = byId("go");
+const progress = byId("prog"), scoreLabel = byId("score"), progressBar = byId("fill");
+
+const appendOr = (element, forms) => appendAlternatives(element, forms, "lub");
+
+addLetterKeys(["ą", "ć", "ę", "ł", "ń", "ó", "ś", "ź", "ż"], () => answerInput);
+
+// ---- Settings ----
+
+let questionCount = 20;
+let verbGroup = "all"; // or one class: "ac", "ow" or "ic"
+let chosenTenses = [PRESENT, PAST, FUTURE, CONDITIONAL];
+
+singleChoice("seg", value => { questionCount = Number(value); });
+singleChoice("cls", value => { verbGroup = value; });
+multiChoice(
+  byId("tns"),
+  TENSE_BUTTONS.map((label, tense) => ({ value: tense, label, english: TENSE_BUTTONS_EN[tense] })),
+  () => chosenTenses,
+  chosen => { chosenTenses = chosen; }
+);
+
+// ---- The round ----
+
+let questions = [], questionIndex = 0, score = 0, mistakes = [];
+let phase = ""; // "ask" while the player types, "review" while the answer shows
+
+// The tenses and verb classes are spread evenly over the round; within a class each verb
+// is used once before any comes back, and the person is drawn at random.
+function startRound() {
+  const tenses = shuffled(chosenTenses);
+  const classes = verbGroup === "all" ? ["ac", "ow", "ic"] : [verbGroup];
+  const tenseOfQuestion = shuffled(Array.from({ length: questionCount }, (_, k) => tenses[k % tenses.length]));
+  const classOfQuestion = shuffled(Array.from({ length: questionCount }, (_, k) => classes[k % classes.length]));
+  const unusedVerbs = {};
+
+  questions = tenseOfQuestion.map((tense, k) => {
+    const verbClass = classOfQuestion[k];
+    if (!unusedVerbs[verbClass] || !unusedVerbs[verbClass].length) {
+      unusedVerbs[verbClass] = shuffled(VERBS_BY_CLASS[verbClass]);
+    }
+    const verb = unusedVerbs[verbClass].pop();
+    const rows = CONJUGATIONS.get(verb)[tense];
+    const row = rows[Math.floor(Math.random() * rows.length)];
+    return { verb, tense, ...row };
   });
-  const tb=tab.createTBody();
-  T.forEach((name,t)=>{
-    const g=tb.insertRow();g.className="tg";
-    const gc=g.insertCell();gc.colSpan=1+vs.length;
-    gc.appendChild(en(el("span","tl",name),T_EN[t]));
-    cj[0][t].forEach((row,k)=>{
-      const r=tb.insertRow();en(r.insertCell(),row.e).textContent=row.w;
-      cj.forEach(x=>{r.insertCell().textContent=x[t][k].a[0];});
+  questionIndex = 0;
+  score = 0;
+  mistakes = [];
+  showSection("quiz");
+  showQuestion();
+}
+
+function showScore() {
+  setText(scoreLabel, `Punkty ${score}`, `Score ${score}`);
+}
+
+function showQuestion() {
+  const question = questions[questionIndex];
+  const number = questionIndex + 1, total = questions.length;
+  phase = "ask";
+  setText(progress, `Pytanie ${number} z ${total}`, `Question ${number} of ${total}`);
+  showScore();
+  progressBar.style.width = (questionIndex / total * 100) + "%";
+  setText(byId("verb"), question.verb, ENGLISH[question.verb]);
+  setText(byId("tense"), TENSES[question.tense], TENSES_EN[question.tense]);
+  setText(byId("who"), question.label, question.english);
+  byId("tline").innerHTML = timelineSvg(TIMELINE_OF_TENSE[question.tense]);
+  highlightPerson(byId("pgrid"), question.person);
+  answerInput.value = "";
+  answerInput.readOnly = false;
+  answerInput.className = "";
+  setLetterKeysEnabled(true);
+  feedback.hidden = true;
+  setText(mainButton, "Sprawdź", "Check");
+  answerInput.focus();
+}
+
+function checkAnswer() {
+  const question = questions[questionIndex];
+  const typed = normalizeAnswer(answerInput.value);
+  if (!typed) return;
+  const asTyped = answerInput.value.trim();
+  const isRight = question.answers.some(answer => normalizeAnswer(answer) === typed);
+  const matches = isRight ? null : identifyForm(typed, question);
+  if (isRight) score++;
+  else mistakes.push({ question, typed: asTyped, matches });
+
+  answerInput.readOnly = true;
+  answerInput.className = isRight ? "ok" : "bad";
+  setLetterKeysEnabled(false);
+  feedback.hidden = false;
+  feedback.className = "fb " + (isRight ? "ok" : "bad");
+  feedback.textContent = "";
+  if (isRight) {
+    feedback.append(setText(makeElement("span"), "Dobrze", "Correct"));
+    const alsoAccepted = question.answers.filter(answer => normalizeAnswer(answer) !== typed);
+    if (alsoAccepted.length) {
+      const note = setText(makeElement("span", "k"), "także ", "also accepted: " + alsoAccepted.join(", "));
+      appendOr(note, alsoAccepted);
+      feedback.append(note);
+    }
+  } else {
+    const answers = makeElement("span", "fa");
+    appendOr(answers, question.answers);
+    feedback.append(setText(makeElement("span"), "Odpowiedź", "Answer"), " ", answers);
+    if (matches) {
+      feedback.append(setText(makeElement("span", "k"),
+        `„${asTyped}” to ` + describeInPolish(matches), `“${asTyped}” is ` + describeInEnglish(matches)));
+    }
+  }
+  showScore();
+  progressBar.style.width = ((questionIndex + 1) / questions.length * 100) + "%";
+  const isLast = questionIndex === questions.length - 1;
+  setText(mainButton, isLast ? "Zobacz wynik" : "Dalej", isLast ? "See your score" : "Next");
+  phase = "review";
+}
+
+function nextQuestion() {
+  questionIndex++;
+  if (questionIndex < questions.length) showQuestion();
+  else showResults();
+}
+
+function onMainButton() {
+  if (phase === "ask") checkAnswer();
+  else nextQuestion();
+}
+
+// ---- Results ----
+
+function showResults() {
+  showSection("done");
+  const total = questions.length, percent = Math.round(score / total * 100);
+  byId("res").textContent = `${score} / ${total}`;
+  const perfect = mistakes.length === 0;
+  setText(byId("pct"), `${percent}% poprawnych` + (perfect ? ", bez błędów" : ""), `${percent}% correct` + (perfect ? ", no mistakes" : ""));
+
+  const table = byId("miss");
+  byId("misshead").hidden = table.hidden = perfect;
+  [...table.tBodies].forEach(body => body.remove());
+  mistakes.forEach(mistake => addMistakeRows(table, mistake));
+}
+
+// One mistake: the verb, tense and person, then what was typed beside the right answer.
+function addMistakeRows(table, { question, typed, matches }) {
+  const body = table.createTBody(), heading = makeElement("th");
+  heading.colSpan = 2;
+  heading.scope = "rowgroup";
+  body.insertRow().append(heading);
+  heading.append(
+    withEnglish(makeElement("span", "v", question.verb), ENGLISH[question.verb]),
+    setText(makeElement("span", "k"),
+      TENSE_BUTTONS[question.tense].toLowerCase() + " · " + question.label,
+      TENSE_BUTTONS_EN[question.tense].toLowerCase() + " · " + question.english));
+
+  const row = body.insertRow(), typedCell = row.insertCell();
+  typedCell.append(makeElement("span", "no", typed));
+  if (matches) {
+    typedCell.className = "real";
+    typedCell.append(setText(makeElement("span", "k"), "to " + describeInPolish(matches), "is " + describeInEnglish(matches)));
+  }
+  const answerCell = row.insertCell();
+  answerCell.className = "yes";
+  answerCell.textContent = question.answers[0];
+}
+
+// ---- Tables ----
+
+// One model verb from each class; any of them can be shown side by side.
+const MODEL_VERBS = ["czytać", "kupować", "robić", "uczyć"];
+let tableVerbs = ["czytać"];
+
+const paintTableChoice = multiChoice(
+  byId("vchips"),
+  MODEL_VERBS.map(verb => ({ value: verb, label: verb })),
+  () => tableVerbs,
+  chosen => { tableVerbs = MODEL_VERBS.filter(verb => chosen.includes(verb)); buildTables(); }
+);
+
+function buildTables() {
+  paintTableChoice();
+  const conjugations = tableVerbs.map(verb => CONJUGATIONS.get(verb));
+  const table = byId("tbl");
+  table.textContent = "";
+  table.style.minWidth = (170 + tableVerbs.length * 150) + "px";
+
+  const header = table.createTHead().insertRow();
+  header.appendChild(makeElement("th"));
+  for (const verb of tableVerbs) header.appendChild(makeElement("th", "vh", verb));
+
+  const body = table.createTBody();
+  TENSES.forEach((name, tense) => {
+    const tenseRow = body.insertRow();
+    tenseRow.className = "tg";
+    const tenseCell = tenseRow.insertCell();
+    tenseCell.colSpan = 1 + tableVerbs.length;
+    tenseCell.appendChild(setText(makeElement("span", "tl"), name, TENSES_EN[tense]));
+    conjugations[0][tense].forEach((formRow, k) => {
+      const row = body.insertRow();
+      setText(row.insertCell(), formRow.label, formRow.english);
+      for (const conjugation of conjugations) row.insertCell().textContent = conjugation[tense][k].answers[0];
     });
   });
 }
 
-$("start").onclick=start;
-$("go").onclick=go;
-$("again").onclick=start;
-$("change").onclick=()=>show("setup");
-$("ans").addEventListener("keydown",e=>{
-  if(e.key==="Enter"&&!e.isComposing){e.preventDefault();if(!e.repeat)go();}
+// ---- Wiring ----
+
+byId("start").onclick = startRound;
+mainButton.onclick = onMainButton;
+byId("again").onclick = startRound;
+byId("change").onclick = () => showSection("setup");
+answerInput.addEventListener("keydown", event => {
+  if (event.key !== "Enter" || event.isComposing) return;
+  event.preventDefault();
+  if (!event.repeat) onMainButton();
 });
-window.addEventListener("hashchange",view);
-view();
+window.addEventListener("hashchange", updateView);
+updateView();

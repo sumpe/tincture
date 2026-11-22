@@ -4,7 +4,7 @@
 // Tenses, in order: presente, perfeito, imperfeito, mais-que-perfeito, futuro, condicional,
 // presente do conjuntivo, imperfeito do conjuntivo, futuro do conjuntivo.
 // Each tense lists six persons (eu, tu, ele, nós, vós, eles); "a/b" means both forms are accepted.
-const D={
+const VERB_TABLES={
 cantar:["canto cantas canta cantamos cantais cantam","cantei cantaste cantou cantámos/cantamos cantastes cantaram","cantava cantavas cantava cantávamos cantáveis cantavam","cantara cantaras cantara cantáramos cantáreis cantaram","cantarei cantarás cantará cantaremos cantareis cantarão","cantaria cantarias cantaria cantaríamos cantaríeis cantariam","cante cantes cante cantemos canteis cantem","cantasse cantasses cantasse cantássemos cantásseis cantassem","cantar cantares cantar cantarmos cantardes cantarem"],
 comer:["como comes come comemos comeis comem","comi comeste comeu comemos comestes comeram","comia comias comia comíamos comíeis comiam","comera comeras comera comêramos comêreis comeram","comerei comerás comerá comeremos comereis comerão","comeria comerias comeria comeríamos comeríeis comeriam","coma comas coma comamos comais comam","comesse comesses comesse comêssemos comêsseis comessem","comer comeres comer comermos comerdes comerem"],
 abrir:["abro abres abre abrimos abris abrem","abri abriste abriu abrimos abristes abriram","abria abrias abria abríamos abríeis abriam","abrira abriras abrira abríramos abríreis abriram","abrirei abrirás abrirá abriremos abrireis abrirão","abriria abririas abriria abriríamos abriríeis abririam","abra abras abra abramos abrais abram","abrisse abrisses abrisse abríssemos abrísseis abrissem","abrir abrires abrir abrirmos abrirdes abrirem"],
@@ -30,8 +30,8 @@ ir:["vou vais vai vamos ides vão","fui foste foi fomos fostes foram","ia ias ia
 "dormir":["durmo dormes dorme dormimos dormis dormem", "dormi dormiste dormiu dormimos dormistes dormiram", "dormia dormias dormia dormíamos dormíeis dormiam", "dormira dormiras dormira dormíramos dormíreis dormiram", "dormirei dormirás dormirá dormiremos dormireis dormirão", "dormiria dormirias dormiria dormiríamos dormiríeis dormiriam", "durma durmas durma durmamos durmais durmam", "dormisse dormisses dormisse dormíssemos dormísseis dormissem", "dormir dormires dormir dormirmos dormirdes dormirem"]
 };
 
-// Regular verbs by conjugation; their forms are built from the endings in index.html.
-const REGV={
+// Regular verbs by conjugation; their forms are built from the endings in app.js.
+const REGULAR_VERBS={
 ar:["cantar","falar","andar","pensar","trabalhar","comprar","estudar","chamar","usar","esperar","ajudar","gostar","mostrar","ganhar","mandar","entrar","olhar","amar","levar","tomar","passar","deixar","lavar","tirar","acabar","parar","terminar","preparar","visitar","lembrar","mudar","morar","viajar","nadar","jantar"],
 er:["comer","beber","vender","correr","escrever","aprender","responder","esconder","prometer","temer","varrer","entender","defender","ofender","atender","dever","mexer","ceder"],
 ir:["partir","decidir","abrir","assistir","existir","insistir","admitir","permitir","unir","dividir","discutir","cumprir","aplaudir","persistir","resistir","omitir","emitir","imprimir","invadir"]
@@ -39,7 +39,7 @@ ir:["partir","decidir","abrir","assistir","existir","insistir","admitir","permit
 
 // Spanish forms for the tables, in order: presente, indefinido, imperfecto, presente de subjuntivo,
 // imperfecto de subjuntivo (-ra), the future/conditional stem, and the participle.
-const E={
+const SPANISH={
 cantar:["canto cantas canta cantamos cantáis cantan","canté cantaste cantó cantamos cantasteis cantaron","cantaba cantabas cantaba cantábamos cantabais cantaban","cante cantes cante cantemos cantéis canten","cantara cantaras cantara cantáramos cantarais cantaran","cantar","cantado"],
 comer:["como comes come comemos coméis comen","comí comiste comió comimos comisteis comieron","comía comías comía comíamos comíais comían","coma comas coma comamos comáis coman","comiera comieras comiera comiéramos comierais comieran","comer","comido"],
 abrir:["abro abres abre abrimos abrís abren","abrí abriste abrió abrimos abristeis abrieron","abría abrías abría abríamos abríais abrían","abra abras abra abramos abráis abran","abriera abrieras abriera abriéramos abrierais abrieran","abrir","abierto"],
@@ -66,10 +66,10 @@ ir:["voy vas va vamos vais van","fui fuiste fue fuimos fuisteis fueron","iba iba
 };
 
 // Spanish infinitive where it differs from the Portuguese one.
-const XI={"ter": "tener", "haver": "haber", "pôr": "poner", "fazer": "hacer", "dizer": "decir", "vir": "venir", "trazer": "traer", "ler": "leer", "sair": "salir", "ouvir": "oír"};
+const SPANISH_INFINITIVES={"ter": "tener", "haver": "haber", "pôr": "poner", "fazer": "hacer", "dizer": "decir", "vir": "venir", "trazer": "traer", "ler": "leer", "sair": "salir", "ouvir": "oír"};
 
 // English for each infinitive, shown on hover in the game (not in the tables).
-const GLOSS={
+const ENGLISH={
 ser:"to be (permanent)",estar:"to be (temporary, or where)",ter:"to have",haver:"to have (auxiliary); there is",
 "pôr":"to put",ir:"to go",fazer:"to do, to make",dizer:"to say",dar:"to give",ver:"to see",vir:"to come",
 poder:"can, to be able to",querer:"to want",saber:"to know",trazer:"to bring",ler:"to read",

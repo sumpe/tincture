@@ -1,154 +1,294 @@
 // Polyverb, Swedish: the game and the tables. Shared helpers are in ../trainer.js.
+// Each question shows an infinitive; the player types its three principal parts.
 
-const SLOT=["presens","preteritum","supinum"],SLOT_EN=["present","past","supine"];
-const GL=["Första","Andra","Tredje","Fjärde"],GL_EN=["First","Second","Third","Fourth"];
-const GN=["första konjugationen","andra konjugationen","tredje konjugationen","fjärde konjugationen"];
-const GN_EN=["1st conjugation","2nd conjugation","3rd conjugation","4th conjugation: strong and irregular"];
+// ---- Words on the page ----
 
-const accepts=(form,typed)=>form.split("/").some(x=>norm(x)===norm(typed));
-const mk=common=>([v,pres,pret,sup,g,gloss])=>({v,f:[pres,pret,sup],g:g-1,gloss,common});
-const VERBS=SV.map(mk(true)).concat(SV_MORE.map(mk(false)));
-const FI=[$("f0"),$("f1"),$("f2")];
-// Every form of every verb, infinitive included (slot -1), so a wrong answer can be traced to where it belongs
-const IDX=Object.create(null);
-VERBS.forEach(x=>[x.v].concat(x.f).forEach((f,s)=>f.split("/").forEach(y=>{const k=norm(y);(IDX[k]=IDX[k]||[]).push({x,s:s-1});})));
-// What a wrong answer in box k really is: up to two {verb, slots}, or null.
-// Forms of the verb that was asked win over look-alikes from other verbs.
-function info(c,k,t){
-  const m=t&&IDX[norm(t)];if(!m)return null;
-  const by=new Map();
-  m.forEach(({x,s})=>{if(x===c&&s===k)return;if(!by.has(x))by.set(x,[]);if(!by.get(x).includes(s))by.get(x).push(s);});
-  let l=[...by].map(([x,s])=>({x,s}));const own=l.filter(y=>y.x===c);if(own.length)l=own;
-  return l.length?l.slice(0,2):null;
-}
-// ...said in Swedish, "preteritum av se", and in English, "the past of se (to see)"
-const list=(a,w)=>a.length>1?a.slice(0,-1).join(", ")+" "+w+" "+a[a.length-1]:a[0];
-const infoSv=(l,c)=>l.map(y=>list(y.s.map(s=>s<0?"infinitiv":SLOT[s]),"och")+(y.x===c?"":" av "+y.x.v)).join(" eller ");
-const infoEn=(l,c)=>l.map(y=>"the "+list(y.s.map(s=>s<0?"infinitive":SLOT_EN[s]),"and")+(y.x===c?"":" of "+y.x.v+" ("+y.x.gloss+")")).join(" or ");
+const PARTS = ["presens", "preteritum", "supinum"];
+const PARTS_EN = ["present", "past", "supine"];
+const INFINITIVE = -1; // where a typed form is the infinitive rather than one of the three parts
 
-let n=20,groups=[0,1,2,3],which="common",tg=0,q=[],i=0,score=0,miss=[],phase="",lastInput=FI[0];
+const CONJUGATION_BUTTONS = ["Första", "Andra", "Tredje", "Fjärde"];
+const CONJUGATION_BUTTONS_EN = ["First", "Second", "Third", "Fourth"];
+const CONJUGATION_NAMES = ["första konjugationen", "andra konjugationen", "tredje konjugationen", "fjärde konjugationen"];
+const CONJUGATION_NAMES_EN = ["1st conjugation", "2nd conjugation", "3rd conjugation", "4th conjugation: strong and irregular"];
+const ORDINALS = ["första", "andra", "tredje", "fjärde"];
+const ORDINALS_EN = ["first", "second", "third", "fourth"];
 
-seg("seg",v=>{n=+v;});
-seg("which",v=>{which=v;});
-seg("tconj",v=>{tg=+v;buildTable();});
+// ---- The verbs ----
 
-// The four conjugations: any combination, at least one
-GL.forEach((l,k)=>{
-  const b=en(el("button",null,l),GL_EN[k]+" conjugation");
-  b.onclick=()=>{const on=groups.includes(k);if(on&&groups.length===1)return;groups=on?groups.filter(x=>x!==k):groups.concat(k).sort();paintG();};
-  $("conj").appendChild(b);
-});
-function paintG(){
-  [...$("conj").children].forEach((b,k)=>{const on=groups.includes(k);b.classList.toggle("on",on);b.setAttribute("aria-pressed",String(on));});
-  // How many verbs each choice gives, for the conjugations picked
-  const inG=VERBS.filter(x=>groups.includes(x.g)),c=inG.filter(x=>x.common).length;
-  $("w-common").textContent="Vanliga ("+c+")";$("w-all").textContent="Alla ("+inG.length+")";
-}
-paintG();
+// verbs.js lists each verb as [infinitive, presens, preteritum, supinum, conjugation 1–4, English].
+const toVerb = common => ([infinitive, present, past, supine, conjugation, english]) =>
+  ({ infinitive, parts: [present, past, supine], conjugation: conjugation - 1, english, common });
+const VERBS = COMMON_VERBS.map(toVerb(true)).concat(RARER_VERBS.map(toVerb(false)));
 
-letterKeys("å ä ö".split(" "),()=>lastInput);
+// A part like "sa/sade" accepts either spelling.
+const spellings = part => part.split("/");
+const accepts = (part, typed) => spellings(part).some(form => normalizeAnswer(form) === normalizeAnswer(typed));
+const showSpellings = part => part.replace("/", " / ");
 
-function start(){
-  const pool=shuf(VERBS.filter(x=>groups.includes(x.g)&&(which==="all"||x.common)));
-  q=pool.slice(0,n);i=0;score=0;miss=[];
-  show("quiz");render();
-}
-
-function render(){
-  const c=q[i];phase="ask";
-  en($("prog"),"Question "+(i+1)+" of "+q.length).textContent="Fråga "+(i+1)+" av "+q.length;
-  en($("score"),"Score "+score).textContent="Poäng "+score;
-  $("fill").style.width=(i/q.length*100)+"%";
-  en($("verb"),c.gloss).textContent=c.v;
-  FI.forEach((f,k)=>{f.value="";f.readOnly=false;f.className="";$("r"+k).textContent="";});
-  keysOn(true);
-  $("fb").hidden=true;en($("go"),"Check").textContent="Kontrollera";
-  FI[0].focus();
-}
-
-function go(){
-  if(phase==="ask"){
-    const c=q[i],typed=FI.map(f=>f.value.trim()),ok=typed.map((t,k)=>!!t&&accepts(c.f[k],t)),all=ok.every(Boolean);
-    if(all)score++;else miss.push({c,typed,ok});
-    FI.forEach((f,k)=>{
-      f.readOnly=true;f.className=ok[k]?"ok":"bad";
-      const r=$("r"+k);r.textContent="";
-      if(!ok[k]){
-        r.append(c.f[k].replace("/"," / "));
-        // Typed a real form, of this verb or another, in the wrong box? Say which one it is.
-        const inf=info(c,k,typed[k]);
-        if(inf)r.append(en(el("span","k","det är "+infoSv(inf,c)),"that's "+infoEn(inf,c)));
-      }
-    });
-    keysOn(false);
-    const right=ok.filter(Boolean).length,fb=$("fb");
-    fb.hidden=false;fb.className="fb "+(all?"ok":"bad");fb.textContent="";
-    fb.append(all?en(el("span",null,"Rätt"),"Correct"):en(el("span",null,right+" av 3 rätt"),right+" of 3 correct"));
-    en($("score"),"Score "+score).textContent="Poäng "+score;
-    $("fill").style.width=((i+1)/q.length*100)+"%";
-    const last=i===q.length-1;en($("go"),last?"See your score":"Next").textContent=last?"Se resultatet":"Nästa";
-    phase="review";
-  }else{
-    i++;
-    if(i<q.length)render();else finish();
-  }
-}
-
-function finish(){
-  show("done");
-  $("res").textContent=score+" / "+q.length;
-  const pc=Math.round(score/q.length*100);
-  en($("pct"),pc+"% correct"+(miss.length?"":", no mistakes")).textContent=pc+" % rätt"+(miss.length?"":", inga fel");
-  $("misshead").hidden=$("miss").hidden=!miss.length;
-  const L=$("miss");[...L.tBodies].forEach(b=>b.remove());
-  miss.forEach(m=>{
-    const c=m.c,b=L.createTBody(),h=el("th");
-    h.colSpan=3;h.scope="rowgroup";b.insertRow().append(h);
-    h.append(en(el("span","v",c.v),c.gloss),en(el("span","k",GN[c.g]),GN_EN[c.g]));
-    const r=b.insertRow();
-    c.f.forEach((form,k)=>{
-      const td=r.insertCell();
-      if(m.ok[k]){td.append(el("span","fine",m.typed[k]));return;}
-      const inf=info(c,k,m.typed[k]);
-      if(inf)td.className="real";
-      td.append(el("span","no",m.typed[k]||"—"),el("span","yes",form.replace("/"," / ")));
-      if(inf)td.append(en(el("span","k","det är "+infoSv(inf,c)),"you wrote "+infoEn(inf,c)));
-    });
+// Every form of every verb, infinitives included, so a wrong answer can be traced to where it belongs.
+const FORMS = new Map(); // normalized form → [{ verb, part }]
+for (const verb of VERBS) {
+  [verb.infinitive, ...verb.parts].forEach((forms, k) => {
+    for (const form of spellings(forms)) {
+      const key = normalizeAnswer(form);
+      if (!FORMS.has(key)) FORMS.set(key, []);
+      FORMS.get(key).push({ verb, part: k - 1 });
+    }
   });
+}
+
+// What a wrong answer in the box for `part` really is: up to two { verb, parts }, or null.
+// Forms of the verb that was asked about win over look-alikes from other verbs.
+function identifyForm(askedVerb, part, typed) {
+  const found = typed && FORMS.get(normalizeAnswer(typed));
+  if (!found) return null;
+  const partsByVerb = new Map();
+  for (const match of found) {
+    if (match.verb === askedVerb && match.part === part) continue;
+    if (!partsByVerb.has(match.verb)) partsByVerb.set(match.verb, []);
+    const parts = partsByVerb.get(match.verb);
+    if (!parts.includes(match.part)) parts.push(match.part);
+  }
+  let matches = [...partsByVerb].map(([verb, parts]) => ({ verb, parts }));
+  const ofAskedVerb = matches.filter(match => match.verb === askedVerb);
+  if (ofAskedVerb.length) matches = ofAskedVerb;
+  return matches.length ? matches.slice(0, 2) : null;
+}
+
+// "a", "a och b", "a, b och c"
+function joinList(items, andWord) {
+  if (items.length === 1) return items[0];
+  return items.slice(0, -1).join(", ") + " " + andWord + " " + items[items.length - 1];
+}
+
+// The matches said in Swedish, "preteritum av se", and in English, "the past of se (to see)"
+function describeInSwedish(matches, askedVerb) {
+  return matches.map(({ verb, parts }) => {
+    const names = joinList(parts.map(part => part === INFINITIVE ? "infinitiv" : PARTS[part]), "och");
+    return verb === askedVerb ? names : `${names} av ${verb.infinitive}`;
+  }).join(" eller ");
+}
+
+function describeInEnglish(matches, askedVerb) {
+  return matches.map(({ verb, parts }) => {
+    const names = "the " + joinList(parts.map(part => part === INFINITIVE ? "infinitive" : PARTS_EN[part]), "and");
+    return verb === askedVerb ? names : `${names} of ${verb.infinitive} (${verb.english})`;
+  }).join(" or ");
+}
+
+// ---- The page ----
+
+const answerInputs = [byId("f0"), byId("f1"), byId("f2")];
+const correctAnswers = [byId("r0"), byId("r1"), byId("r2")];
+const progress = byId("prog"), scoreLabel = byId("score"), progressBar = byId("fill");
+const verbLabel = byId("verb"), feedback = byId("fb"), mainButton = byId("go");
+
+// ---- Settings ----
+
+let questionCount = 20;
+let chosenConjugations = [0, 1, 2, 3];
+let verbSet = "common"; // or "all", the rare verbs too
+let tableConjugation = 0;
+
+singleChoice("seg", value => { questionCount = Number(value); });
+singleChoice("which", value => { verbSet = value; });
+singleChoice("tconj", value => { tableConjugation = Number(value); buildTables(); });
+
+multiChoice(
+  byId("conj"),
+  CONJUGATION_BUTTONS.map((label, k) => ({ value: k, label, english: CONJUGATION_BUTTONS_EN[k] + " conjugation" })),
+  () => chosenConjugations,
+  chosen => { chosenConjugations = chosen.sort(); showVerbCounts(); }
+);
+
+// How many verbs each choice gives, for the conjugations picked
+function showVerbCounts() {
+  const inChosen = VERBS.filter(verb => chosenConjugations.includes(verb.conjugation));
+  const common = inChosen.filter(verb => verb.common);
+  byId("w-common").textContent = `Vanliga (${common.length})`;
+  byId("w-all").textContent = `Alla (${inChosen.length})`;
+}
+showVerbCounts();
+
+// The letter keys type into whichever answer box was used last.
+let lastUsedInput = answerInputs[0];
+addLetterKeys(["å", "ä", "ö"], () => lastUsedInput);
+
+// ---- The round ----
+
+let questions = [], questionIndex = 0, score = 0, mistakes = [];
+let phase = ""; // "ask" while the player types, "review" while the answer shows
+
+function startRound() {
+  const eligible = VERBS.filter(verb =>
+    chosenConjugations.includes(verb.conjugation) && (verbSet === "all" || verb.common));
+  questions = shuffled(eligible).slice(0, questionCount);
+  questionIndex = 0;
+  score = 0;
+  mistakes = [];
+  showSection("quiz");
+  showQuestion();
+}
+
+function showScore() {
+  setText(scoreLabel, `Poäng ${score}`, `Score ${score}`);
+}
+
+function showQuestion() {
+  const verb = questions[questionIndex];
+  const number = questionIndex + 1, total = questions.length;
+  phase = "ask";
+  setText(progress, `Fråga ${number} av ${total}`, `Question ${number} of ${total}`);
+  showScore();
+  progressBar.style.width = (questionIndex / total * 100) + "%";
+  setText(verbLabel, verb.infinitive, verb.english);
+  answerInputs.forEach((input, k) => {
+    input.value = "";
+    input.readOnly = false;
+    input.className = "";
+    correctAnswers[k].textContent = "";
+  });
+  setLetterKeysEnabled(true);
+  feedback.hidden = true;
+  setText(mainButton, "Kontrollera", "Check");
+  answerInputs[0].focus();
+}
+
+function checkAnswer() {
+  const verb = questions[questionIndex];
+  const typed = answerInputs.map(input => input.value.trim());
+  const right = typed.map((answer, k) => !!answer && accepts(verb.parts[k], answer));
+  const allRight = right.every(Boolean);
+  if (allRight) score++;
+  else mistakes.push({ verb, typed, right });
+
+  answerInputs.forEach((input, k) => {
+    input.readOnly = true;
+    input.className = right[k] ? "ok" : "bad";
+    const correction = correctAnswers[k];
+    correction.textContent = "";
+    if (right[k]) return;
+    correction.append(showSpellings(verb.parts[k]));
+    // A real form, of this verb or another, in the wrong box? Say which one it is.
+    const matches = identifyForm(verb, k, typed[k]);
+    if (matches) {
+      correction.append(setText(makeElement("span", "k"),
+        "det är " + describeInSwedish(matches, verb), "that's " + describeInEnglish(matches, verb)));
+    }
+  });
+  setLetterKeysEnabled(false);
+
+  const rightCount = right.filter(Boolean).length;
+  feedback.hidden = false;
+  feedback.className = "fb " + (allRight ? "ok" : "bad");
+  feedback.textContent = "";
+  feedback.append(allRight
+    ? setText(makeElement("span"), "Rätt", "Correct")
+    : setText(makeElement("span"), `${rightCount} av 3 rätt`, `${rightCount} of 3 correct`));
+  showScore();
+  progressBar.style.width = ((questionIndex + 1) / questions.length * 100) + "%";
+  const isLast = questionIndex === questions.length - 1;
+  setText(mainButton, isLast ? "Se resultatet" : "Nästa", isLast ? "See your score" : "Next");
+  phase = "review";
+}
+
+function nextQuestion() {
+  questionIndex++;
+  if (questionIndex < questions.length) showQuestion();
+  else showResults();
+}
+
+function onMainButton() {
+  if (phase === "ask") checkAnswer();
+  else nextQuestion();
 }
 
 // Enter moves on to the next empty box; once all three are filled it checks them.
-FI.forEach((f,k)=>{
-  f.addEventListener("focus",()=>{lastInput=f;});
-  f.addEventListener("keydown",e=>{
-    if(e.key!=="Enter"||e.isComposing)return;
-    e.preventDefault();if(e.repeat)return;
-    if(phase==="ask"){
-      const next=[...FI.slice(k+1),...FI.slice(0,k)].find(x=>!x.value.trim());
-      if(next){next.focus();return;}
+answerInputs.forEach((input, k) => {
+  input.addEventListener("focus", () => { lastUsedInput = input; });
+  input.addEventListener("keydown", event => {
+    if (event.key !== "Enter" || event.isComposing) return;
+    event.preventDefault();
+    if (event.repeat) return;
+    if (phase === "ask") {
+      const othersInOrder = [...answerInputs.slice(k + 1), ...answerInputs.slice(0, k)];
+      const nextEmpty = othersInOrder.find(other => !other.value.trim());
+      if (nextEmpty) { nextEmpty.focus(); return; }
     }
-    go();
+    onMainButton();
   });
 });
-// One conjugation, every verb, alphabetical (Swedish order: å, ä, ö after z).
-// Only the infinitive carries English on hover.
-const ORD=["första","andra","tredje","fjärde"],ORD_EN=["first","second","third","fourth"];
-function buildTable(){
-  const vs=VERBS.filter(x=>x.g===tg).sort((a,b)=>a.v.localeCompare(b.v,"sv")),tab=$("tbl");
-  en($("tcount"),vs.length+" verbs in the "+ORD_EN[tg]+" conjugation").textContent=vs.length+" verb i "+ORD[tg]+" konjugationen";
-  tab.textContent="";
-  const h=tab.createTHead().insertRow();
-  [["infinitiv","infinitive"]].concat(SLOT.map((x,k)=>[x,SLOT_EN[k]])).forEach(([sv,e])=>h.appendChild(en(el("th",null,sv),e)));
-  const tb=tab.createTBody();
-  vs.forEach(x=>{
-    const r=tb.insertRow();
-    en(r.insertCell(),x.gloss).textContent=x.v;
-    x.f.forEach(f=>{r.insertCell().textContent=f.replace("/"," / ");});
+
+// ---- Results ----
+
+function showResults() {
+  showSection("done");
+  const total = questions.length, percent = Math.round(score / total * 100);
+  byId("res").textContent = `${score} / ${total}`;
+  const perfect = mistakes.length === 0;
+  setText(byId("pct"), `${percent} % rätt` + (perfect ? ", inga fel" : ""), `${percent}% correct` + (perfect ? ", no mistakes" : ""));
+
+  const table = byId("miss");
+  byId("misshead").hidden = table.hidden = perfect;
+  [...table.tBodies].forEach(body => body.remove());
+  mistakes.forEach(mistake => addMistakeRows(table, mistake));
+}
+
+// One mistake: the verb and its conjugation, then each part as typed, with the right form under any wrong one.
+function addMistakeRows(table, { verb, typed, right }) {
+  const body = table.createTBody(), heading = makeElement("th");
+  heading.colSpan = 3;
+  heading.scope = "rowgroup";
+  body.insertRow().append(heading);
+  heading.append(
+    withEnglish(makeElement("span", "v", verb.infinitive), verb.english),
+    setText(makeElement("span", "k"), CONJUGATION_NAMES[verb.conjugation], CONJUGATION_NAMES_EN[verb.conjugation]));
+
+  const row = body.insertRow();
+  verb.parts.forEach((part, k) => {
+    const cell = row.insertCell();
+    if (right[k]) { cell.append(makeElement("span", "fine", typed[k])); return; }
+    const matches = identifyForm(verb, k, typed[k]);
+    if (matches) cell.className = "real";
+    cell.append(makeElement("span", "no", typed[k] || "—"), makeElement("span", "yes", showSpellings(part)));
+    if (matches) {
+      cell.append(setText(makeElement("span", "k"),
+        "det är " + describeInSwedish(matches, verb), "you wrote " + describeInEnglish(matches, verb)));
+    }
   });
 }
-window.addEventListener("hashchange",view);
-$("start").onclick=start;
-$("go").onclick=go;
-$("again").onclick=start;
-$("change").onclick=()=>show("setup");
-view();
+
+// ---- Tables ----
+
+// One conjugation, every verb, alphabetical (Swedish order: å, ä, ö after z).
+// Only the infinitive carries English on hover.
+function buildTables() {
+  const verbs = VERBS.filter(verb => verb.conjugation === tableConjugation)
+    .sort((a, b) => a.infinitive.localeCompare(b.infinitive, "sv"));
+  setText(byId("tcount"),
+    `${verbs.length} verb i ${ORDINALS[tableConjugation]} konjugationen`,
+    `${verbs.length} verbs in the ${ORDINALS_EN[tableConjugation]} conjugation`);
+
+  const table = byId("tbl");
+  table.textContent = "";
+  const header = table.createTHead().insertRow();
+  header.appendChild(setText(makeElement("th"), "infinitiv", "infinitive"));
+  PARTS.forEach((part, k) => header.appendChild(setText(makeElement("th"), part, PARTS_EN[k])));
+
+  const body = table.createTBody();
+  for (const verb of verbs) {
+    const row = body.insertRow();
+    setText(row.insertCell(), verb.infinitive, verb.english);
+    for (const part of verb.parts) row.insertCell().textContent = showSpellings(part);
+  }
+}
+
+// ---- Wiring ----
+
+byId("start").onclick = startRound;
+mainButton.onclick = onMainButton;
+byId("again").onclick = startRound;
+byId("change").onclick = () => showSection("setup");
+window.addEventListener("hashchange", updateView);
+updateView();

@@ -7,7 +7,7 @@
 // Måste and ska are left out: neither has an infinitive in use.
 
 // The common verbs: the 100 most frequent first, then other everyday verbs. The quiz uses these by default.
-const SV=[
+const COMMON_VERBS=[
 ["vara","är","var","varit",4,"to be"],
 ["ha","har","hade","haft",4,"to have"],
 ["kunna","kan","kunde","kunnat",4,"can, to be able to"],
@@ -380,7 +380,7 @@ const SV=[
 ];
 
 // The rest: less frequent verbs, so the tables (and the quiz, if asked) cover the verbs in use.
-const SV_MORE=[
+const RARER_VERBS=[
 ["blåsa","blåser","blåste","blåst",2,"to blow"],
 ["blöda","blöder","blödde","blött",2,"to bleed"],
 ["bekänna","bekänner","bekände","bekänt",2,"to confess"],

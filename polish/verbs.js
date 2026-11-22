@@ -1,13 +1,13 @@
 // Polyverb, Polish: the verbs, by class, and their English. The game script in app.js reads these.
 // Loaded with a plain <script src>, not as a module, so the page still works opened straight from disk.
 
-const V={
+const VERBS_BY_CLASS={
 ac:["czytać","pytać","słuchać","grać","czekać","szukać","kochać","pamiętać","wracać","sprzątać","odpowiadać","zaczynać","pomagać","otwierać","zamykać","mieszkać","śpiewać","wołać","oglądać","zapominać","powtarzać","używać"],
 ow:["kupować","pracować","gotować","rysować","planować","potrzebować","dziękować","pakować","parkować","rezerwować","studiować","malować","ratować","podróżować","spacerować","telefonować","organizować"],
 ic:["robić","lubić","mówić","dzwonić","gubić","karmić","bronić","chwalić","palić","mylić","uczyć","liczyć","ćwiczyć","tańczyć","tłumaczyć","męczyć","kończyć","marzyć","mierzyć"]
 };
 // English for each infinitive, shown on hover in the game (not in the tables). All are imperfective.
-const GLOSS={
+const ENGLISH={
 "czytać":"to read","pytać":"to ask","słuchać":"to listen","grać":"to play","czekać":"to wait","szukać":"to look for",
 "kochać":"to love","pamiętać":"to remember","wracać":"to come back","sprzątać":"to tidy up, to clean","odpowiadać":"to answer",
 "zaczynać":"to begin","pomagać":"to help","otwierać":"to open","zamykać":"to close","mieszkać":"to live (somewhere)",
