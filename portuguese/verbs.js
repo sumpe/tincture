@@ -1,4 +1,4 @@
-// Polyverb, Portuguese: the verb data. The game script in index.html reads these.
+// Polyverb, Portuguese: the verb data. The game script in app.js reads these.
 // Loaded with a plain <script src>, not as a module, so the page still works opened straight from disk.
 
 // Tenses, in order: presente, perfeito, imperfeito, mais-que-perfeito, futuro, condicional,
