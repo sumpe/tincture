@@ -62,18 +62,18 @@ function joinList(items, andWord) {
   return items.slice(0, -1).join(", ") + " " + andWord + " " + items[items.length - 1];
 }
 
-// The matches said in Swedish, "preteritum av se", and in English, "the past of se (to see)"
+// The matches said in Swedish, "preteritum av ”se”", and in English, "the past of “se” (to see)"
 function describeInSwedish(matches, askedVerb) {
   return matches.map(({ verb, parts }) => {
     const names = joinList(parts.map(part => part === INFINITIVE ? "infinitiv" : PARTS[part]), "och");
-    return verb === askedVerb ? names : `${names} av ${verb.infinitive}`;
+    return verb === askedVerb ? names : `${names} av ”${verb.infinitive}”`;
   }).join(" eller ");
 }
 
 function describeInEnglish(matches, askedVerb) {
   return matches.map(({ verb, parts }) => {
     const names = "the " + joinList(parts.map(part => part === INFINITIVE ? "infinitive" : PARTS_EN[part]), "and");
-    return verb === askedVerb ? names : `${names} of ${verb.infinitive} (${verb.english})`;
+    return verb === askedVerb ? names : `${names} of “${verb.infinitive}” (${verb.english})`;
   }).join(" or ");
 }
 
@@ -174,7 +174,7 @@ function checkAnswer() {
     const matches = identifyForm(verb, k, typed[k]);
     if (matches) {
       correction.append(setText(makeElement("span", "k"),
-        "det är " + describeInSwedish(matches, verb), "that's " + describeInEnglish(matches, verb)));
+        `”${typed[k]}” är ` + describeInSwedish(matches, verb), `“${typed[k]}” is ` + describeInEnglish(matches, verb)));
     }
   });
   setLetterKeysEnabled(false);
