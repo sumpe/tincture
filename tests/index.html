@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Polynoun tests</title>
+<link rel="stylesheet" href="../css/site.css">
+<style>
+main{max-width:720px;margin:0 auto;padding:32px 20px 64px}
+h1{margin:0 0 6px;font-weight:600;font-size:1.8rem}
+#sum{margin:0 0 24px;color:var(--muted);font-style:italic}
+.suite{margin:0 0 10px;padding:10px 14px;border:1px solid var(--line);border-radius:8px;background:var(--card)}
+.suite.bad{border-color:var(--bad)}
+.suite p{margin:0;display:flex;justify-content:space-between;gap:12px}
+.suite .n{color:var(--muted);font-style:italic}
+.suite ul{margin:8px 0 0;padding:0 0 0 18px;color:var(--bad);font-size:.92rem}
+iframe{position:absolute;left:-9999px;width:400px;height:800px;border:0}
+</style>
+</head>
+<body>
+<main>
+  <h1>Polynoun tests</h1>
+  <p id="sum">Running…</p>
+  <div id="out"></div>
+</main>
+<!-- The data checks read the word lists directly; the game checks play a round in each page. -->
+<script src="../js/trainer.js"></script>
+<script src="../swedish/nouns.js"></script>
+<script src="../polish/nouns.js"></script>
+<script>
+const suites = new Map();
+function check(suite, ok, message) {
+  if (!suites.has(suite)) suites.set(suite, { pass: 0, fail: [] });
+  const entry = suites.get(suite);
+  if (ok) entry.pass++; else entry.fail.push(message);
+}
+
+// ---- Swedish data ----
+
+const SV_VOWELS = "aeiouyåäö";
+const syllables = word => (word.toLowerCase().match(new RegExp(`[${SV_VOWELS}]+`, "g")) || []).length;
+const bare = singular => singular.split(" ").slice(1).join(" ");
+const newUmlaut = (base, plural) => ["ä", "ö"].some(v => plural.includes(v) && !base.includes(v));
+const ENDINGS = { or: /or$/, ar: /ar$/, er: /r$/, n: /n$/ };
+
+const seenPlural = new Map();
+for (const [pool, entries] of Object.entries(POOLS)) {
+  const seen = new Set();
+  for (const entry of entries) {
+    const [singular, plural, group, english, hint] = entry;
+    const name = `${pool}: ${singular}`;
+    check("Swedish: fields", entry.length === 5 && singular && plural && group && english && hint, `${name} is missing a field`);
+    check("Swedish: article", /^(en|ett) \S/.test(singular), `${name} must start with en or ett`);
+    const pair = typeof hint === "string" ? HINTS[hint] : hint;
+    check("Swedish: hints", Array.isArray(pair) && pair.length === 2 && pair.every(Boolean), `${name} has no hint "${hint}"`);
+    check("Swedish: no duplicates in a pool", !seen.has(singular), `${name} is listed twice`);
+    seen.add(singular);
+    if (seenPlural.has(singular)) {
+      check("Swedish: same plural in every pool", seenPlural.get(singular) === plural + group, `${name} differs from another pool`);
+    }
+    seenPlural.set(singular, plural + group);
+    const base = bare(singular);
+    if (group === "0") check("Swedish: groups match the plural", plural === base, `${name}: group 0 but "${plural}" ≠ "${base}"`);
+    else if (ENDINGS[group]) check("Swedish: groups match the plural", spellings(plural).every(p => ENDINGS[group].test(p)), `${name}: group ${group} but "${plural}"`);
+    else check("Swedish: groups match the plural", group === "x", `${name}: unknown group ${group}`);
+  }
+}
+for (const [singular, plural, group] of POOLS.short) {
+  check("Swedish, one syllable: one syllable", syllables(bare(singular)) === 1, `"${singular}" has ${syllables(bare(singular))} syllables`);
+  check("Swedish, one syllable: no new umlaut", !newUmlaut(bare(singular), plural), `"${singular}" → "${plural}" adds an umlaut`);
+  check("Swedish, one syllable: -ar or -er", group === "ar" || group === "er", `"${singular}" is in group ${group}`);
+}
+check("Swedish, one syllable: pool size", POOLS.short.length >= 80, `only ${POOLS.short.length} words`);
+check("Swedish: no hint key unused", Object.keys(HINTS).every(key => Object.values(POOLS).flat().some(e => e[4] === key)),
+  "unused: " + Object.keys(HINTS).filter(key => !Object.values(POOLS).flat().some(e => e[4] === key)).join(", "));
+
+// ---- Polish data ----
+
+const GENDERS = ["f", "n", "mi", "ma", "mp", "m-a"];
+const seenPolish = new Set();
+for (const noun of POLISH_NOUNS) {
+  const name = noun.nominative;
+  check("Polish: fields", GENDERS.includes(noun.gender) && noun.english && CASES.every(key => noun.forms[key]), `${name} is missing a field`);
+  check("Polish: no duplicates", !seenPolish.has(name), `${name} is listed twice`);
+  seenPolish.add(name);
+  for (const key of Object.keys(noun.extras)) {
+    const note = noun.extras[key];
+    check("Polish: exception notes", (CASES.includes(key) || key === "note") && Array.isArray(note) && note.length === 2, `${name}: bad note "${key}"`);
+  }
+  for (const key of CASES) {
+    if (noun.extras[key]) continue;
+    check("Polish: every regular form fits its rule", ruleFor(key, noun) !== null,
+      `${name} (${noun.gender}, ${noun.stem}), ${key} "${noun.forms[key]}" fits no rule`);
+  }
+}
+check("Polish: -a or -u pool size", POLISH_NOUNS.filter(n => n.gender === "mi").length >= 40, "fewer than 40 masculine inanimates");
+
+// ---- Shared helpers ----
+
+check("Helpers", normalizeAnswer("  Bilar ") === "bilar", "normalizeAnswer trims and lowercases");
+check("Helpers", accepts("pokoi/pokojów", "pokojów") && accepts("pokoi/pokojów", "POKOI") && !accepts("pokoi/pokojów", "pokoj"), "accepts takes either spelling");
+check("Helpers", (() => { const a = [1, 2, 3]; const b = shuffled(a); return a.join() === "1,2,3" && b.slice().sort().join() === "1,2,3"; })(), "shuffled keeps every item and leaves the original alone");
+check("Helpers", markedForm("kobiecie", "kobieta").querySelector(".end")?.textContent === "cie", "markedForm marks what changed");
+check("Helpers", !markedForm("hus", "hus").querySelector(".end"), "markedForm marks nothing when nothing changed");
+
+// ---- Playing the games ----
+
+function loadPage(src) {
+  return new Promise(resolve => {
+    const frame = document.createElement("iframe");
+    frame.src = src;
+    frame.onload = () => resolve(frame.contentWindow);
+    document.body.appendChild(frame);
+  });
+}
+
+// Answer every question, rightly when right(k) says so; return what the page showed
+function playRound(win, answerFor, right) {
+  const doc = win.document;
+  doc.getElementById("start").click();
+  const total = win.eval("questions.length");
+  let expected = 0;
+  const notes = [];
+  for (let k = 0; k < total; k++) {
+    const answer = answerFor(win.eval("questions[questionIndex]"));
+    doc.getElementById("ans").value = right(k) ? answer : "xyz";
+    if (right(k)) expected++;
+    doc.getElementById("go").click();
+    notes.push(doc.querySelector("#fb .rule")?.textContent || "");
+    doc.getElementById("go").click();
+  }
+  return { total, expected, notes, result: doc.getElementById("res").textContent,
+           missRows: doc.querySelectorAll("#miss tbody tr").length, done: !doc.getElementById("done").hidden };
+}
+
+async function playGames() {
+  const errors = [];
+
+  const sv = await loadPage("../swedish/index.html");
+  sv.addEventListener("error", e => errors.push("Swedish: " + e.message));
+  for (const level of ["easy", "medium", "hard", "short"]) {
+    sv.document.querySelector(`#level [data-v="${level}"]`).click();
+    sv.document.querySelector(`#count [data-v="50"]`).click();
+    const round = playRound(sv, noun => noun.plural.split("/")[0], k => k % 3 !== 0);
+    const size = POOLS[level].length;
+    check("Swedish game", round.done, `${level}: the results never showed`);
+    check("Swedish game", round.total === Math.min(50, size), `${level}: ${round.total} questions, expected ${Math.min(50, size)}`);
+    check("Swedish game", round.result === `${round.expected} / ${round.total}`, `${level}: score "${round.result}", expected ${round.expected} / ${round.total}`);
+    check("Swedish game", round.missRows === round.total - round.expected, `${level}: ${round.missRows} rows to review`);
+    check("Swedish game", round.notes.every(Boolean), `${level}: a question had no rule`);
+    sv.document.getElementById("change").click();
+  }
+  sv.location.hash = "#tables";
+  let shown = 0;
+  for (const group of ["or", "ar", "er", "n", "0", "x"]) {
+    sv.document.querySelector(`#tgroup [data-v="${group}"]`).click();
+    shown += sv.document.querySelectorAll("#tbl tbody tr").length;
+  }
+  check("Swedish tables", shown === sv.eval("ALL_NOUNS.length") && shown > 0, `${shown} rows in all, for ${sv.eval("ALL_NOUNS.length")} nouns`);
+
+  const pl = await loadPage("../polish/index.html");
+  pl.addEventListener("error", e => errors.push("Polish: " + e.message));
+  pl.document.querySelector(`#count [data-v="30"]`).click();
+  for (const which of ["all", "regular"]) {
+    pl.document.querySelector(`#which [data-v="${which}"]`).click();
+    const round = playRound(pl, q => q.noun.forms[q.caseKey].split("/")[0], k => k % 2 === 0);
+    check("Polish game", round.done && round.total === 30, `cases (${which}): ${round.total} questions`);
+    check("Polish game", round.result === `${round.expected} / ${round.total}`, `cases (${which}): score "${round.result}"`);
+    check("Polish game", round.missRows === round.total - round.expected, `cases (${which}): ${round.missRows} rows to review`);
+    check("Polish game", round.notes.every(Boolean), `cases (${which}): a question had no rule`);
+    pl.document.getElementById("change").click();
+  }
+  pl.document.querySelector(`#mode [data-v="au"]`).click();
+  const au = playRound(pl, q => q.noun.forms.genSg, () => true);
+  check("Polish game", au.result === `${au.total} / ${au.total}`, `-a czy -u: score "${au.result}"`);
+  check("Polish game", pl.eval("questions.every(q => q.caseKey === 'genSg' && q.noun.gender === 'mi')"), "-a czy -u asked something else");
+  check("Polish game", pl.eval("CASES.every(c => POLISH_NOUNS.every(n => explain(n, c)[0] && explain(n, c)[1]))"), "a noun and case with no note");
+  const counts = [1, 2, 4, 5, 12, 14, 22, 25, 112].map(n => pl.countNouns(n)).join(", ");
+  check("Polish: counting", counts === "1 rzeczownik, 2 rzeczowniki, 4 rzeczowniki, 5 rzeczowników, 12 rzeczowników, 14 rzeczowników, 22 rzeczowniki, 25 rzeczowników, 112 rzeczowników", counts);
+  pl.location.hash = "#tables";
+  shown = 0;
+  for (const gender of ["f", "m", "n"]) {
+    pl.document.querySelector(`#tgender [data-v="${gender}"]`).click();
+    shown += pl.document.querySelectorAll("#tbl tbody tr").length;
+  }
+  check("Polish tables", shown === POLISH_NOUNS.length, `${shown} rows in all, for ${POLISH_NOUNS.length} nouns`);
+
+  check("No script errors", errors.length === 0, errors.join("; "));
+}
+
+function report() {
+  const out = document.getElementById("out");
+  let passes = 0, fails = 0;
+  for (const [name, { pass, fail }] of suites) {
+    passes += pass;
+    fails += fail.length;
+    const box = document.createElement("div");
+    box.className = "suite" + (fail.length ? " bad" : "");
+    box.innerHTML = `<p><span>${fail.length ? "✗" : "✓"} ${name}</span><span class="n">${pass} passed${fail.length ? `, ${fail.length} failed` : ""}</span></p>`;
+    if (fail.length) {
+      const list = document.createElement("ul");
+      for (const message of fail) list.appendChild(Object.assign(document.createElement("li"), { textContent: message }));
+      box.appendChild(list);
+    }
+    out.appendChild(box);
+  }
+  document.getElementById("sum").textContent = fails ? `${fails} failing, ${passes} passing` : `All ${passes} passing`;
+  document.title = fails ? "FAIL" : "PASS";
+  document.body.dataset.done = "1";
+}
+
+playGames().catch(error => check("No script errors", false, String(error))).finally(report);
+</script>
+</body>
+</html>
