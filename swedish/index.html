@@ -153,6 +153,22 @@ const accepts=(form,typed)=>form.split("/").some(x=>norm(x)===norm(typed));
 const mk=common=>([v,pres,pret,sup,g,gloss])=>({v,f:[pres,pret,sup],g:g-1,gloss,common});
 const VERBS=SV.map(mk(true)).concat(SV_MORE.map(mk(false)));
 const FI=[$("f0"),$("f1"),$("f2")];
+// Every form of every verb, infinitive included (slot -1), so a wrong answer can be traced to where it belongs
+const IDX=Object.create(null);
+VERBS.forEach(x=>[x.v].concat(x.f).forEach((f,s)=>f.split("/").forEach(y=>{const k=norm(y);(IDX[k]=IDX[k]||[]).push({x,s:s-1});})));
+// What a wrong answer in box k really is: up to two {verb, slots}, or null.
+// Forms of the verb that was asked win over look-alikes from other verbs.
+function info(c,k,t){
+  const m=t&&IDX[norm(t)];if(!m)return null;
+  const by=new Map();
+  m.forEach(({x,s})=>{if(x===c&&s===k)return;if(!by.has(x))by.set(x,[]);if(!by.get(x).includes(s))by.get(x).push(s);});
+  let l=[...by].map(([x,s])=>({x,s}));const own=l.filter(y=>y.x===c);if(own.length)l=own;
+  return l.length?l.slice(0,2):null;
+}
+// ...said in Swedish, "preteritum av se", and in English, "the past of se (to see)"
+const list=(a,w)=>a.length>1?a.slice(0,-1).join(", ")+" "+w+" "+a[a.length-1]:a[0];
+const infoSv=(l,c)=>l.map(y=>list(y.s.map(s=>s<0?"infinitiv":SLOT[s]),"och")+(y.x===c?"":" av "+y.x.v)).join(" eller ");
+const infoEn=(l,c)=>l.map(y=>"the "+list(y.s.map(s=>s<0?"infinitive":SLOT_EN[s]),"and")+(y.x===c?"":" of "+y.x.v+" ("+y.x.gloss+")")).join(" or ");
 
 let n=20,groups=[0,1,2,3],which="common",tg=0,q=[],i=0,score=0,miss=[],phase="",cur="setup",lastInput=FI[0];
 
@@ -234,9 +250,9 @@ function go(){
       const r=$("r"+k);r.textContent="";
       if(!ok[k]){
         r.append(c.f[k].replace("/"," / "));
-        // Typed another of this verb's forms in the wrong box? Say which one it is.
-        const j=c.f.findIndex((x,m)=>m!==k&&typed[k]&&accepts(x,typed[k]));
-        if(j>=0)r.append(en(el("span","k","det är "+SLOT[j]),"that's the "+SLOT_EN[j]));
+        // Typed a real form, of this verb or another, in the wrong box? Say which one it is.
+        const inf=info(c,k,typed[k]);
+        if(inf)r.append(en(el("span","k","det är "+infoSv(inf,c)),"that's "+infoEn(inf,c)));
       }
     });
     keysOn(false);
@@ -268,10 +284,10 @@ function finish(){
     c.f.forEach((form,k)=>{
       const td=r.insertCell();
       if(m.ok[k]){td.append(el("span","fine",m.typed[k]));return;}
-      const j=c.f.findIndex((x,s)=>s!==k&&m.typed[k]&&accepts(x,m.typed[k]));
-      if(j>=0)td.className="real";
+      const inf=info(c,k,m.typed[k]);
+      if(inf)td.className="real";
       td.append(el("span","no",m.typed[k]||"—"),el("span","yes",form.replace("/"," / ")));
-      if(j>=0)td.append(en(el("span","k","det är "+SLOT[j]),"you wrote the "+SLOT_EN[j]));
+      if(inf)td.append(en(el("span","k","det är "+infoSv(inf,c)),"you wrote "+infoEn(inf,c)));
     });
   });
 }
