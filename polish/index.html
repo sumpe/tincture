@@ -39,6 +39,7 @@
 /* Polish specifics: six cases in a grid, three across, two on phones */
 #cases{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
 @media (max-width:480px){#cases{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:400px){#cases button{padding:8px 4px;font-size:.94rem}}
 .case{margin-top:6px}
 .keys{--keys:9}
 </style>

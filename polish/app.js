@@ -5,21 +5,21 @@
 // ---- Words on the page ----
 
 const CASE_INFO = {
-  nomPl: { label: "Mianownik lm.", name: "mianownik, liczba mnoga", en: "nominative plural", frame: ["to są", "these are"] },
-  genSg: { label: "Dopełniacz", name: "dopełniacz", en: "genitive", frame: ["nie ma", "there is no"] },
-  genPl: { label: "Dopełniacz lm.", name: "dopełniacz, liczba mnoga", en: "genitive plural", frame: ["dużo", "a lot of"] },
-  accSg: { label: "Biernik", name: "biernik", en: "accusative", frame: ["widzę", "I see"] },
-  locSg: { label: "Miejscownik", name: "miejscownik", en: "locative", frame: ["myślę o", "I'm thinking about"] },
-  insSg: { label: "Narzędnik", name: "narzędnik", en: "instrumental", frame: ["przed", "in front of"] },
+  nomPl: { label: "Mianownik\u00a0lm.", name: "mianownik, liczba mnoga", en: "nominative plural", frame: ["to są", "these are"] },
+  genSg: { label: "Dopełniacz\u00a0lp.", name: "dopełniacz, liczba pojedyncza", en: "genitive singular", frame: ["nie ma", "there is no"] },
+  genPl: { label: "Dopełniacz\u00a0lm.", name: "dopełniacz, liczba mnoga", en: "genitive plural", frame: ["dużo", "a lot of"] },
+  accSg: { label: "Biernik\u00a0lp.", name: "biernik, liczba pojedyncza", en: "accusative singular", frame: ["widzę", "I see"] },
+  locSg: { label: "Miejscownik\u00a0lp.", name: "miejscownik, liczba pojedyncza", en: "locative singular", frame: ["myślę o", "I'm thinking about"] },
+  insSg: { label: "Narzędnik\u00a0lp.", name: "narzędnik, liczba pojedyncza", en: "instrumental singular", frame: ["przed", "in front of"] },
 };
 
 // The table's columns: the singular cases, then the plural ones
 const TABLE_COLUMNS = [
-  ["nominative", "mianownik", "nominative"],
-  ["genSg", "dopełniacz", "genitive"],
-  ["accSg", "biernik", "accusative"],
-  ["locSg", "miejscownik", "locative"],
-  ["insSg", "narzędnik", "instrumental"],
+  ["nominative", "mianownik lp.", "nominative singular"],
+  ["genSg", "dopełniacz lp.", "genitive singular"],
+  ["accSg", "biernik lp.", "accusative singular"],
+  ["locSg", "miejscownik lp.", "locative singular"],
+  ["insSg", "narzędnik lp.", "instrumental singular"],
   ["nomPl", "mianownik lm.", "nominative plural"],
   ["genPl", "dopełniacz lm.", "genitive plural"],
 ];
@@ -62,7 +62,7 @@ function explain(noun, caseKey) {
 // What a wrong answer really is, when it's another form of the same noun: "„kocie” to miejscownik"
 function identifyForm(noun, caseKey, typed) {
   const matches = [];
-  if (accepts(noun.nominative, typed)) matches.push(["mianownik", "the nominative"]);
+  if (accepts(noun.nominative, typed)) matches.push(["mianownik, liczba pojedyncza", "the nominative singular"]);
   for (const other of CASES) {
     if (other !== caseKey && accepts(noun.forms[other], typed)) matches.push([CASE_INFO[other].name, "the " + CASE_INFO[other].en]);
   }
