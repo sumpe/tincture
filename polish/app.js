@@ -1,6 +1,7 @@
 // Polynoun, Polish: the game and the tables. Shared helpers are in ../js/trainer.js.
 // Each question shows a noun, a case and a few words that call for it ("nie ma ___");
 // the player types the form. A second mode drills the genitive of masculine inanimates: -a or -u?
+// A third asks a noun's gender, answered with ten, ta or to.
 
 // ---- Words on the page ----
 
@@ -85,7 +86,8 @@ const progress = byId("prog"), scoreLabel = byId("score"), progressBar = byId("f
 
 // ---- Settings ----
 
-let mode = "cases";       // or "au", the -a or -u drill
+let mode = "cases";       // or "au", the -a or -u drill, or "gender"
+let genderLevel = "easy";
 let chosenCases = [...CASES];
 let withExceptions = true;
 let questionCount = 20;
@@ -94,6 +96,7 @@ let tableGroup = "f";
 singleChoice("mode", value => { mode = value; showModeSettings(); });
 singleChoice("count", value => { questionCount = Number(value); });
 singleChoice("which", value => { withExceptions = value === "all"; });
+singleChoice("gender-level", value => { genderLevel = value; describeGenderLevel(); });
 singleChoice("tgender", value => { tableGroup = value; buildTables(); });
 
 multiChoice(
@@ -105,9 +108,31 @@ multiChoice(
 
 const AU_NOUNS = POLISH_NOUNS.filter(noun => noun.gender === "mi");
 
+// ---- Gender ----
+
+const DEMONSTRATIVES = { m: "ten", f: "ta", n: "to" };
+const GENDER_NAMES = { m: ["męski", "masculine"], f: ["żeński", "feminine"], n: ["nijaki", "neuter"] };
+const GENDER_LEVELS = {
+  easy:   ["Spółgłoska twarda, -a albo -o: końcówka mówi wszystko.", "A hard consonant, -a or -o: the ending says it all."],
+  medium: ["Końcówki z własną regułą: -e, -ę i -um; -ość, -ew i -i; -ek, -ec, -nik, -arz i -erz.", "Endings with a rule of their own: -e, -ę and -um; -ość, -ew and -i; -ek, -ec, -nik, -arz and -erz."],
+  hard:   ["Spółgłoski miękkie, które mogą być męskie albo żeńskie, mężczyźni na -a i nieodmienne zapożyczenia.", "Soft consonants that go either way, men in -a, and loanwords that don't decline."],
+};
+// nouns.js lists each as [noun, gender, English, hint].
+const GENDER_NOUNS = Object.fromEntries(Object.entries(GENDER_POOLS).map(([level, nouns]) =>
+  [level, nouns.map(([nominative, gender, english, hint]) =>
+    ({ nominative, gender, english, hint: typeof hint === "string" ? GENDER_HINTS[hint] : hint }))]));
+
+function describeGenderLevel() {
+  const [polish, english] = GENDER_LEVELS[genderLevel];
+  const size = GENDER_NOUNS[genderLevel].length;
+  setText(byId("gender-about"), `${polish} ${countNouns(size)}.`, `${english} ${size} nouns.`);
+}
+describeGenderLevel();
+
 function showModeSettings() {
   byId("cases-settings").hidden = mode !== "cases";
   byId("au-settings").hidden = mode !== "au";
+  byId("gender-settings").hidden = mode !== "gender";
 }
 setText(byId("au-count"), countNouns(AU_NOUNS.length) + ".", `${AU_NOUNS.length} nouns.`);
 showModeSettings();
@@ -117,10 +142,13 @@ addLetterKeys(["ą", "ć", "ę", "ł", "ń", "ó", "ś", "ź", "ż"], answerInpu
 // ---- The round ----
 
 let questions = [], questionIndex = 0, score = 0, mistakes = [];
-let phase = ""; // "ask" while the player types, "review" while the answer shows
+let roundMode = "cases";
+let phase = ""; // "ask" while the player answers, "review" while the answer shows
+const pickButtons = [...document.querySelectorAll("#pick button")];
 
 // Every noun and case the settings allow, shuffled so that one noun never comes twice in a row
 function chooseQuestions() {
+  if (mode === "gender") return shuffled(GENDER_NOUNS[genderLevel]).slice(0, questionCount).map(noun => ({ noun, caseKey: "gender" }));
   const pairs = mode === "au"
     ? AU_NOUNS.map(noun => ({ noun, caseKey: "genSg" }))
     : POLISH_NOUNS.flatMap(noun => chosenCases
@@ -136,6 +164,10 @@ function chooseQuestions() {
 }
 
 function startRound() {
+  roundMode = mode;
+  const picking = roundMode === "gender";
+  answerInput.hidden = byId("keys").hidden = byId("case").hidden = byId("frame").hidden = picking;
+  byId("pick").hidden = byId("ask").hidden = !picking;
   questions = chooseQuestions();
   questionIndex = 0;
   score = 0;
@@ -150,13 +182,26 @@ function showScore() {
 
 function showQuestion() {
   const { noun, caseKey } = questions[questionIndex];
-  const info = CASE_INFO[caseKey];
   const number = questionIndex + 1, total = questions.length;
   phase = "ask";
   setText(progress, `Pytanie ${number} z ${total}`, `Question ${number} of ${total}`);
   showScore();
   progressBar.style.width = (questionIndex / total * 100) + "%";
-  setText(byId("word"), noun.nominative, noun.english);
+  feedback.hidden = true;
+  const word = byId("word");
+  if (roundMode === "gender") {
+    word.textContent = "";
+    delete word.dataset.en;
+    word.append(makeElement("span", "blank"), " ", withEnglish(makeElement("span", null, noun.nominative), noun.english));
+    for (const button of pickButtons) { button.disabled = false; button.className = ""; }
+    mainButton.hidden = true;
+    // Nothing keeps the focus, so an Enter pressed to move on can't also answer; M, Ż and N answer.
+    document.activeElement?.blur();
+    return;
+  }
+  const info = CASE_INFO[caseKey];
+  mainButton.hidden = false;
+  setText(word, noun.nominative, noun.english);
   setText(byId("case"), info.name, info.en);
   const frame = byId("frame");
   frame.textContent = "";
@@ -166,7 +211,6 @@ function showQuestion() {
   answerInput.readOnly = false;
   answerInput.className = "";
   setLetterKeysEnabled(true);
-  feedback.hidden = true;
   setText(mainButton, "Sprawdź", "Check");
   answerInput.focus();
 }
@@ -177,26 +221,46 @@ function checkAnswer() {
   const typed = answerInput.value.trim();
   if (!typed) { answerInput.focus(); return; }
   const right = accepts(form, typed);
-  if (right) score++;
-  else mistakes.push({ noun, caseKey, typed });
-
   answerInput.readOnly = true;
   answerInput.className = right ? "ok" : "bad";
   setLetterKeysEnabled(false);
 
+  const answer = makeElement("span", "fa");
+  answer.append(framed(caseKey, form, noun));
+  const what = right ? null : identifyForm(noun, caseKey, typed);
+  finishQuestion(right, typed, answer, what ? [what] : [], explain(noun, caseKey));
+}
+
+// Gender: the chosen word of ten, ta and to; the gap fills in with the right one
+function checkGender(gender) {
+  if (phase !== "ask") return;
+  const { noun } = questions[questionIndex];
+  const right = gender === noun.gender;
+  for (const button of pickButtons) {
+    button.disabled = true;
+    if (button.dataset.v === gender) button.className = right ? "ok" : "bad";
+    else if (button.dataset.v === noun.gender) button.className = "was";
+  }
+  byId("word").querySelector(".blank").replaceWith(makeElement("span", "filled", DEMONSTRATIVES[noun.gender]));
+  const answer = makeElement("span", "fa", `${DEMONSTRATIVES[noun.gender]} ${noun.nominative}`);
+  const [polishName, englishName] = GENDER_NAMES[noun.gender];
+  finishQuestion(right, DEMONSTRATIVES[gender], answer,
+    [[`Rodzaj ${polishName}.`, `${englishName[0].toUpperCase()}${englishName.slice(1)}.`]], noun.hint);
+  mainButton.hidden = false;
+  mainButton.focus();
+}
+
+// What every mode does once an answer is in: score it, say so, and offer the next question
+function finishQuestion(right, typed, answer, notes, [polish, english]) {
+  const { noun, caseKey } = questions[questionIndex];
+  if (right) score++;
+  else mistakes.push({ noun, caseKey, typed });
   feedback.hidden = false;
   feedback.className = "fb " + (right ? "ok" : "bad");
   feedback.textContent = "";
-  const answer = makeElement("span", "fa");
-  answer.append(framed(caseKey, form, noun));
-  if (right) {
-    feedback.append(setText(makeElement("span"), "Dobrze", "Correct"), ": ", answer);
-  } else {
-    feedback.append(setText(makeElement("span"), "Odpowiedź", "Answer"), ": ", answer);
-    const what = identifyForm(noun, caseKey, typed);
-    if (what) feedback.append(setText(makeElement("span", "k"), what[0], what[1]));
-  }
-  const [polish, english] = explain(noun, caseKey);
+  if (right) feedback.append(setText(makeElement("span"), "Dobrze", "Correct"), ": ", answer);
+  else feedback.append(setText(makeElement("span"), "Odpowiedź", "Answer"), ": ", answer);
+  for (const [pl, en] of notes) feedback.append(setText(makeElement("span", "k"), pl, en));
   feedback.append(setText(makeElement("span", "rule"), polish, english));
 
   showScore();
@@ -218,6 +282,16 @@ function onMainButton() {
 }
 
 onEnter(answerInput, onMainButton);
+for (const button of pickButtons) button.onclick = () => checkGender(button.dataset.v);
+
+// In the gender game M, Ż (or Z) and N answer, or 1, 2 and 3, from anywhere on the page.
+const GENDER_KEYS = { m: "m", "1": "m", "ż": "f", z: "f", "2": "f", n: "n", "3": "n" };
+document.addEventListener("keydown", event => {
+  if (roundMode !== "gender" || phase !== "ask" || byId("quiz").hidden) return;
+  if (event.ctrlKey || event.metaKey || event.altKey || event.repeat) return;
+  const gender = GENDER_KEYS[event.key.toLowerCase()];
+  if (gender) checkGender(gender);
+});
 
 // ---- Results ----
 
@@ -230,19 +304,24 @@ function showResults() {
 
   const table = byId("miss");
   byId("misshead").hidden = table.hidden = perfect;
+  const gender = roundMode === "gender";
+  const heads = table.tHead.rows[0].cells;
+  setText(heads[0], gender ? "Rzeczownik" : "Pytanie", gender ? "Noun" : "Question");
+  setText(heads[1], gender ? "Wybrano i poprawnie" : "Wpisano i poprawnie", gender ? "You chose, then the answer" : "You wrote, then the answer");
   [...table.tBodies].forEach(body => body.remove());
   const body = table.createTBody();
   for (const { noun, caseKey, typed } of mistakes) {
     const row = body.insertRow();
     const heading = makeElement("th");
     heading.scope = "row";
-    heading.append(withEnglish(makeElement("span", "yes", noun.nominative), noun.english),
-      setText(makeElement("span", "k"), CASE_INFO[caseKey].name, CASE_INFO[caseKey].en));
+    heading.append(withEnglish(makeElement("span", "yes", noun.nominative), noun.english));
+    if (!gender) heading.append(setText(makeElement("span", "k"), CASE_INFO[caseKey].name, CASE_INFO[caseKey].en));
     row.append(heading);
     const cell = row.insertCell();
     const answer = makeElement("span", "yes");
-    answer.append(framed(caseKey, noun.forms[caseKey], noun));
-    cell.append(makeElement("span", "no", typed), answer);
+    if (gender) answer.append(`${DEMONSTRATIVES[noun.gender]} ${noun.nominative}`);
+    else answer.append(framed(caseKey, noun.forms[caseKey], noun));
+    cell.append(makeElement("span", "no", gender ? `${typed} ${noun.nominative}` : typed), answer);
   }
 }
 

@@ -39,19 +39,6 @@
 /* Swedish specifics */
 .keys{--keys:3;max-width:180px;margin:6px auto 0}
 #tbl td:first-child{min-width:9em}
-/* En or ett: the gap where the article goes, then the two answers side by side */
-.word .blank{display:inline-block;width:1.6em;border-bottom:2px solid var(--edge);vertical-align:.12em}
-.word .filled{color:var(--accent);font-weight:400}
-#pick{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:22px}
-#pick button{min-height:72px;border:1px solid var(--edge);border-radius:8px;background:var(--paper);font-size:1.7rem;font-weight:600;transition:background-color .15s,border-color .15s}
-#pick button:disabled{cursor:default}
-#pick button.ok{border-color:var(--ok);background:var(--okbg);color:var(--ok)}
-#pick button.bad{border-color:var(--bad);background:var(--badbg);color:var(--bad)}
-#pick button.was{border-color:var(--ok);border-style:dashed;color:var(--ok)}
-#pick .k{display:block;margin-top:2px;color:var(--muted);font-weight:400;font-style:italic;font-size:.8rem}
-#pick button.ok .k,#pick button.bad .k,#pick button.was .k{visibility:hidden}
-@media (hover:hover){#pick button:not(:disabled):hover{background:var(--hover);border-color:var(--muted)}}
-@media (pointer:coarse){#pick .k{display:none}}
 </style>
 </head>
 <body>
@@ -109,8 +96,8 @@
     <input id="ans" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Plural">
     <div class="keys" id="keys" role="group" aria-label="Å, ä och ö"></div>
     <div id="pick" role="group" aria-label="En eller ett" hidden>
-      <button data-v="en">en<span class="k" data-en="or press E">eller tryck E</span></button>
-      <button data-v="ett">ett<span class="k" data-en="or press T">eller tryck T</span></button>
+      <button data-v="en">en<span class="k key" data-en="or press E">eller tryck E</span></button>
+      <button data-v="ett">ett<span class="k key" data-en="or press T">eller tryck T</span></button>
     </div>
     <div id="fb" class="fb" role="status" hidden></div>
     <button class="primary" id="go">Kontrollera</button>

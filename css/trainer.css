@@ -62,6 +62,21 @@ body.wide .nav .in,body.wide .mast .in,body.wide main{max-width:1100px}
 .end{color:var(--accent);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px}
 .fb .end{color:inherit}
 #go{margin-top:16px}
+/* Picking the article (en or ett; ten, ta or to): a gap in the word, then one button per answer.
+   Each button may carry a quiet line under its word, hidden once answered and on touch screens. */
+.word .blank{display:inline-block;width:1.6em;border-bottom:2px solid var(--edge);vertical-align:.12em}
+.word .filled{color:var(--accent);font-weight:400}
+#pick{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:10px;margin-top:22px}
+#pick button{min-height:72px;padding:6px 4px;border:1px solid var(--edge);border-radius:8px;background:var(--paper);font-size:1.7rem;line-height:1.15;font-weight:600;transition:background-color .15s,border-color .15s}
+#pick button:disabled{cursor:default}
+#pick button.ok{border-color:var(--ok);background:var(--okbg);color:var(--ok)}
+#pick button.bad{border-color:var(--bad);background:var(--badbg);color:var(--bad)}
+#pick button.was{border-color:var(--ok);border-style:dashed;color:var(--ok)}
+#pick .k{display:block;margin-top:2px;color:var(--muted);font-weight:400;font-style:italic;font-size:.8rem}
+#pick .key{white-space:nowrap}
+#pick button.ok .key,#pick button.bad .key,#pick button.was .key{visibility:hidden}
+@media (hover:hover){#pick button:not(:disabled):hover{background:var(--hover);border-color:var(--muted)}}
+@media (pointer:coarse){#pick .key{display:none}}
 /* Letters with diacritics, for keyboards that can't type them. Each page sets --keys, its column count. */
 .keys{display:grid;grid-template-columns:repeat(var(--keys,9),minmax(0,1fr));gap:4px;margin:10px 0 0}
 .keys button{min-height:38px;padding:0;border:1px solid var(--line);border-radius:5px;background:transparent;font-size:1.15rem;line-height:1;transition:background-color .15s,opacity .15s}

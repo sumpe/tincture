@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Polskie przypadki 🥟</title>
+<title>Polskie rzeczowniki 🥟</title>
 <meta name="theme-color" content="#f7f3ec" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#19110c" media="(prefers-color-scheme: dark)">
 <link rel="stylesheet" href="../css/site.css">
@@ -53,8 +53,8 @@
   </div>
 </div></nav>
 <header class="mast"><div class="in">
-  <h1 data-en="Polish Cases">Polskie przypadki&nbsp;🥟</h1>
-  <p class="sub" id="sub" data-en="A noun, a case and the words that call for it. Type the form; diacritics count.">Rzeczownik, przypadek i słowa, które go wymagają. Wpisz formę; znaki diakrytyczne się liczą.</p>
+  <h1 data-en="Polish Nouns">Polskie rzeczowniki&nbsp;🥟</h1>
+  <p class="sub" id="sub" data-en="Cases and gender. Type the form, or pick ten, ta or to; diacritics count.">Przypadki i rodzaj. Wpisz formę albo wybierz ten, ta czy to; znaki diakrytyczne się liczą.</p>
   <nav class="tabs" aria-label="Sekcje">
     <a href="#game" id="tab-game" aria-current="page" data-en="Practice">Trening</a>
     <a href="#tables" id="tab-tables" data-en="Tables">Tabele</a>
@@ -66,6 +66,7 @@
     <div class="seg" id="mode" role="group" aria-labelledby="l-m">
       <button data-v="cases" class="on" aria-pressed="true" data-en="Cases">Przypadki</button>
       <button data-v="au" aria-pressed="false" data-en="Genitive: -a or -u?">-a czy -u?</button>
+      <button data-v="gender" aria-pressed="false" data-en="Gender">Rodzaj</button>
     </div>
 
     <div id="cases-settings">
@@ -83,6 +84,16 @@
       <p class="hint" data-en="The genitive of masculine nouns that aren't alive: nie ma stołu (there's no table), but nie ma klucza (there's no key). There's no sure rule. Usually -a: tools, body parts, fruit and vegetables, months. Usually -u: vehicles, abstract things and many loanwords.">Dopełniacz rzeczowników męskich nieżywotnych: nie ma stołu, ale nie ma klucza. Nie ma pewnej reguły. Zwykle -a: narzędzia, części ciała, owoce i warzywa, miesiące. Zwykle -u: pojazdy, rzeczy abstrakcyjne i wiele zapożyczeń. <span class="n" id="au-count"></span></p>
     </div>
 
+    <div id="gender-settings" hidden>
+      <span class="lbl" id="l-l" data-en="Level">Poziom</span>
+      <div class="seg tight" id="gender-level" role="group" aria-labelledby="l-l">
+        <button data-v="easy" class="on" aria-pressed="true" data-en="Easy">Łatwy</button>
+        <button data-v="medium" aria-pressed="false" data-en="Medium">Średni</button>
+        <button data-v="hard" aria-pressed="false" data-en="Hard">Trudny</button>
+      </div>
+      <p class="hint" id="gender-about" aria-live="polite"></p>
+    </div>
+
     <span class="lbl" id="l-n" data-en="Number of questions">Liczba pytań</span>
     <div class="seg" id="count" role="group" aria-labelledby="l-n">
       <button data-v="10" aria-pressed="false">10</button>
@@ -95,11 +106,17 @@
   <section id="quiz" hidden>
     <div class="top"><span id="prog"></span><span id="score"></span></div>
     <div class="bar"><div id="fill"></div></div>
+    <p class="ask" id="ask" hidden data-en="Ten, ta or to?">Ten, ta czy to?</p>
     <div class="word" id="word"></div>
     <div class="case" id="case"></div>
     <div class="frame" id="frame"></div>
     <input id="ans" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Twoja odpowiedź">
     <div class="keys" id="keys" role="group" aria-label="Litery ze znakami diakrytycznymi"></div>
+    <div id="pick" role="group" aria-label="Rodzaj" hidden>
+      <button data-v="m">ten<span class="k"><span data-en="masculine">męski</span><span class="key" data-en="or press M"> · M</span></span></button>
+      <button data-v="f">ta<span class="k"><span data-en="feminine">żeński</span><span class="key" data-en="or press Ż or Z"> · Ż</span></span></button>
+      <button data-v="n">to<span class="k"><span data-en="neuter">nijaki</span><span class="key" data-en="or press N"> · N</span></span></button>
+    </div>
     <div id="fb" class="fb" role="status" hidden></div>
     <button class="primary" id="go">Sprawdź</button>
   </section>

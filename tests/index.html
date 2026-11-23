@@ -119,6 +119,32 @@ for (const noun of POLISH_NOUNS) {
       `${name} (${noun.gender}, ${noun.stem}), ${key} "${noun.forms[key]}" fits no rule`);
   }
 }
+// ---- Polish gender ----
+
+const GENDER_ENDINGS = { consM: /[^aeiouyąęó]$/, aF: /a$/, oN: /o$/, eN: /e$/, ęN: /ę$/, umN: /um$/, ośćF: /ość$/, iF: /i$/,
+  ewF: /ew$/, ekM: /ek$/, ecM: /ec$/, nikM: /nik$/, arzM: /[ae]rz$/, manA: /a$/ };
+const allGender = Object.values(GENDER_POOLS).flat();
+check("Polish gender: no duplicates", new Set(allGender.map(e => e[0])).size === allGender.length, "a noun is listed twice");
+for (const [pool, entries] of Object.entries(GENDER_POOLS)) {
+  for (const entry of entries) {
+    const [noun, gender, english, hint] = entry;
+    const name = `${pool}: ${noun}`;
+    check("Polish gender: fields", entry.length === 4 && ["m", "f", "n"].includes(gender) && english, `${name} is missing a field`);
+    const pair = typeof hint === "string" ? GENDER_HINTS[hint] : hint;
+    check("Polish gender: hints", Array.isArray(pair) && pair.length === 2 && pair.every(Boolean), `${name} has no hint "${hint}"`);
+    if (typeof hint !== "string") continue;
+    if (GENDER_ENDINGS[hint]) check("Polish gender: the ending the hint names", GENDER_ENDINGS[hint].test(noun), `${name} doesn't end as "${hint}" says`);
+    const said = hint === "manA" ? "m" : hint.slice(-1).toLowerCase();
+    check("Polish gender: the gender the hint names", said === gender, `${name} is ${gender}, but its hint "${hint}" says ${said}`);
+  }
+  for (const gender of ["m", "f", "n"]) {
+    const share = entries.filter(e => e[1] === gender).length / entries.length;
+    check("Polish gender: every gender in every level", share >= 0.2, `${pool}: only ${Math.round(share * 100)}% ${gender}`);
+  }
+}
+check("Polish gender: no hint key unused", Object.keys(GENDER_HINTS).every(key => allGender.some(e => e[3] === key)),
+  "unused: " + Object.keys(GENDER_HINTS).filter(key => !allGender.some(e => e[3] === key)).join(", "));
+
 check("Polish: -a or -u pool size", POLISH_NOUNS.filter(n => n.gender === "mi").length >= 40, "fewer than 40 masculine inanimates");
 
 // ---- Shared helpers ----
@@ -235,6 +261,35 @@ async function playGames() {
   const au = playRound(pl, q => q.noun.forms.genSg, () => true);
   check("Polish game", au.result === `${au.total} / ${au.total}`, `-a czy -u: score "${au.result}"`);
   check("Polish game", pl.eval("questions.every(q => q.caseKey === 'genSg' && q.noun.gender === 'mi')"), "-a czy -u asked something else");
+  // Gender: click every other answer right, and once press a key instead
+  pl.document.getElementById("change").click();
+  pl.document.querySelector(`#mode [data-v="gender"]`).click();
+  for (const level of ["easy", "medium", "hard"]) {
+    const doc = pl.document;
+    doc.querySelector(`#gender-level [data-v="${level}"]`).click();
+    doc.getElementById("start").click();
+    const total = pl.eval("questions.length");
+    let expected = 0, notes = 0;
+    for (let k = 0; k < total; k++) {
+      const { noun } = pl.eval("questions[questionIndex]");
+      const choice = k % 2 ? noun.gender : (noun.gender === "m" ? "f" : "m");
+      if (k % 2) expected++;
+      if (k === 1) doc.dispatchEvent(new pl.KeyboardEvent("keydown", { key: { m: "m", f: "ż", n: "n" }[choice] }));
+      else doc.querySelector(`#pick [data-v="${choice}"]`).click();
+      if (doc.querySelector("#fb .rule")?.textContent) notes++;
+      check("Polish gender game", doc.querySelector("#word .filled")?.textContent === { m: "ten", f: "ta", n: "to" }[noun.gender], `${level}: the gap didn't fill in for ${noun.nominative}`);
+      doc.getElementById("go").click();
+    }
+    check("Polish gender game", !doc.getElementById("done").hidden && total === Math.min(30, GENDER_POOLS[level].length), `${level}: ${total} questions`);
+    check("Polish gender game", doc.getElementById("res").textContent === `${expected} / ${total}`, `${level}: score "${doc.getElementById("res").textContent}", expected ${expected} / ${total}`);
+    check("Polish gender game", doc.querySelectorAll("#miss tbody tr").length === total - expected, `${level}: wrong number of rows to review`);
+    check("Polish gender game", notes === total, `${level}: a question had no rule`);
+    doc.getElementById("change").click();
+  }
+  // And back to the cases, which must look as they did
+  pl.document.querySelector(`#mode [data-v="cases"]`).click();
+  pl.document.getElementById("start").click();
+  check("Polish game", !pl.document.getElementById("ans").hidden && pl.document.getElementById("pick").hidden && !pl.document.getElementById("case").hidden, "the cases game after a gender round still shows the gender buttons");
   check("Polish game", pl.eval("CASES.every(c => POLISH_NOUNS.every(n => explain(n, c)[0] && explain(n, c)[1]))"), "a noun and case with no note");
   const counts = [1, 2, 4, 5, 12, 14, 22, 25, 112].map(n => pl.countNouns(n)).join(", ");
   check("Polish: counting", counts === "1 rzeczownik, 2 rzeczowniki, 4 rzeczowniki, 5 rzeczowników, 12 rzeczowników, 14 rzeczowników, 22 rzeczowniki, 25 rzeczowników, 112 rzeczowników", counts);
