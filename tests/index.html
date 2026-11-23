@@ -74,6 +74,32 @@ check("Swedish, one syllable: pool size", POOLS.short.length >= 80, `only ${POOL
 check("Swedish: no hint key unused", Object.keys(HINTS).every(key => Object.values(POOLS).flat().some(e => e[4] === key)),
   "unused: " + Object.keys(HINTS).filter(key => !Object.values(POOLS).flat().some(e => e[4] === key)).join(", "));
 
+// ---- Swedish en or ett ----
+
+for (const [pool, entries] of Object.entries(GENUS_POOLS)) {
+  const seen = new Set();
+  let ett = 0;
+  for (const entry of entries) {
+    const [singular, definite, english, hint] = entry;
+    const name = `${pool}: ${singular}`;
+    check("En/ett: fields", entry.length === 4 && singular && definite && english && hint, `${name} is missing a field`);
+    check("En/ett: article", /^(en|ett) \S/.test(singular), `${name} must start with en or ett`);
+    const pair = typeof hint === "string" ? GENUS_HINTS[hint] : hint;
+    check("En/ett: hints", Array.isArray(pair) && pair.length === 2 && pair.every(Boolean), `${name} has no hint "${hint}"`);
+    check("En/ett: no duplicates in a pool", !seen.has(singular), `${name} is listed twice`);
+    seen.add(singular);
+    const isEtt = singular.startsWith("ett ");
+    if (isEtt) ett++;
+    check("En/ett: definite form matches the article", isEtt ? /t$/.test(definite) : /n$/.test(definite), `${name}: definite "${definite}"`);
+  }
+  const share = ett / entries.length;
+  check("En/ett: en and ett balanced in each level", share >= 0.4 && share <= 0.6, `${pool}: ${Math.round(share * 100)}% ett`);
+}
+const allGenus = Object.values(GENUS_POOLS).flat();
+check("En/ett: no duplicates across levels", new Set(allGenus.map(e => e[0])).size === allGenus.length, "a noun is in two levels");
+check("En/ett: no hint key unused", Object.keys(GENUS_HINTS).every(key => allGenus.some(e => e[3] === key)),
+  "unused: " + Object.keys(GENUS_HINTS).filter(key => !allGenus.some(e => e[3] === key)).join(", "));
+
 // ---- Polish data ----
 
 const GENDERS = ["f", "n", "mi", "ma", "mp", "m-a"];
@@ -139,7 +165,7 @@ async function playGames() {
   const sv = await loadPage("../swedish/index.html");
   sv.addEventListener("error", e => errors.push("Swedish: " + e.message));
   for (const level of ["easy", "medium", "hard", "short"]) {
-    sv.document.querySelector(`#level [data-v="${level}"]`).click();
+    sv.document.querySelector(`#plural-level [data-v="${level}"]`).click();
     sv.document.querySelector(`#count [data-v="50"]`).click();
     const round = playRound(sv, noun => noun.plural.split("/")[0], k => k % 3 !== 0);
     const size = POOLS[level].length;
@@ -150,13 +176,48 @@ async function playGames() {
     check("Swedish game", round.notes.every(Boolean), `${level}: a question had no rule`);
     sv.document.getElementById("change").click();
   }
+  // En or ett: click the right button on every other question, and once press T or E instead
+  sv.document.querySelector(`#game [data-v="genus"]`).click();
+  for (const level of ["easy", "medium", "hard"]) {
+    sv.document.querySelector(`#genus-level [data-v="${level}"]`).click();
+    const doc = sv.document;
+    doc.getElementById("start").click();
+    const total = sv.eval("questions.length");
+    let expected = 0, notes = 0, pressed = false;
+    for (let k = 0; k < total; k++) {
+      const noun = sv.eval("questions[questionIndex]");
+      const choice = k % 2 ? noun.article : (noun.article === "en" ? "ett" : "en");
+      if (k % 2) expected++;
+      if (k === 1) {
+        doc.dispatchEvent(new sv.KeyboardEvent("keydown", { key: choice === "en" ? "e" : "t" }));
+        pressed = true;
+      } else doc.querySelector(`#pick [data-v="${choice}"]`).click();
+      if (doc.querySelector("#fb .rule")?.textContent) notes++;
+      check("En/ett game", doc.querySelector("#word .filled")?.textContent === noun.article, `${level}: the article didn't fill in for ${noun.singular}`);
+      doc.getElementById("go").click();
+    }
+    check("En/ett game", pressed && !doc.getElementById("done").hidden, `${level}: the results never showed`);
+    check("En/ett game", total === Math.min(50, GENUS_POOLS[level].length), `${level}: ${total} questions`);
+    check("En/ett game", doc.getElementById("res").textContent === `${expected} / ${total}`, `${level}: score "${doc.getElementById("res").textContent}", expected ${expected} / ${total}`);
+    check("En/ett game", doc.querySelectorAll("#miss tbody tr").length === total - expected, `${level}: wrong number of rows to review`);
+    check("En/ett game", notes === total, `${level}: a question had no rule`);
+    doc.getElementById("change").click();
+  }
+
   sv.location.hash = "#tables";
   let shown = 0;
   for (const group of ["or", "ar", "er", "n", "0", "x"]) {
-    sv.document.querySelector(`#tgroup [data-v="${group}"]`).click();
+    sv.document.querySelector(`#tplural [data-v="${group}"]`).click();
     shown += sv.document.querySelectorAll("#tbl tbody tr").length;
   }
-  check("Swedish tables", shown === sv.eval("ALL_NOUNS.length") && shown > 0, `${shown} rows in all, for ${sv.eval("ALL_NOUNS.length")} nouns`);
+  check("Swedish tables", shown === sv.eval("ALL_PLURAL_NOUNS.length") && shown > 0, `${shown} plural rows, for ${sv.eval("ALL_PLURAL_NOUNS.length")} nouns`);
+  sv.document.querySelector(`#tgame [data-v="genus"]`).click();
+  shown = 0;
+  for (const group of ["en", "ett"]) {
+    sv.document.querySelector(`#tgenus [data-v="${group}"]`).click();
+    shown += sv.document.querySelectorAll("#tbl tbody tr").length;
+  }
+  check("Swedish tables", shown === allGenus.length, `${shown} en/ett rows, for ${allGenus.length} nouns`);
 
   const pl = await loadPage("../polish/index.html");
   pl.addEventListener("error", e => errors.push("Polish: " + e.message));

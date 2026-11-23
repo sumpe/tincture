@@ -3,7 +3,7 @@
 Substantivtrainer, Geschwister von [Polyverb](https://github.com/sumpe/polyverb), jeder auf einer einzigen Seite.
 
 - **Polnisch** (`polish/index.html`): sechs Formen von 115 Alltagssubstantiven (Nominativ Plural, Genitiv Singular und Plural, Akkusativ, Lokativ und Instrumental Singular), jede in einer Wendung, die sie verlangt: *nie ma ___*, *myślę o ___*. Nach jeder Antwort erscheint die Regel, die sie erklärt. Dazu kommt ein eigener Trainer für den Genitiv der unbelebten Maskulina: *-a* oder *-u*?
-- **Schwedisch** (`swedish/index.html`): der Plural, in vier Stufen danach, wie vorhersehbar er ist, und nicht danach, wie schwer das Wort ist: leicht, mittel, schwer (Umlaut und Unregelmäßiges) und einsilbige Wörter (*-ar* oder *-er*?).
+- **Schwedisch** (`swedish/index.html`): zwei Spiele, beide in Stufen danach, wie vorhersehbar die Antwort ist, und nicht danach, wie schwer das Wort ist. *Plural*: leicht, mittel, schwer (Umlaut und Unregelmäßiges) und einsilbige Wörter (*-ar* oder *-er*?). *En eller ett*: das Geschlecht, von Endungen, die es verraten (*-ning*, *-um*), bis zu Wörtern, die die Muster brechen; in jeder Stufe etwa gleich viele en- und ett-Wörter, damit sich Raten nicht lohnt.
 
 ## Benutzung
 
@@ -16,7 +16,7 @@ Es muss nichts installiert werden: einfach `index.html` im Browser öffnen und e
 - `js/trainer.js`: die Funktionen, die die Trainer teilen (Abschnitte, Auswahlknöpfe, Buchstabentasten, die Markierung des Teils einer Form, der sich ändert).
 - `js/gloss.js`: zeigt die englische Übersetzung eines Textes, wenn man mit der Maus darüberfährt (nur mit Maus, nie auf Touchscreens).
 - `<Sprache>/app.js`: das Spiel und die Tabellen der jeweiligen Sprache.
-- `swedish/nouns.js`: die schwedischen Substantive mit Plural, Gruppe und Hinweis, in den vier Stufen (`POOLS`).
+- `swedish/nouns.js`: die schwedischen Substantive, für den Plural mit Plural, Gruppe und Hinweis in vier Stufen (`POOLS`), für en/ett mit bestimmter Form und Hinweis in drei Stufen (`GENUS_POOLS`).
 - `polish/nouns.js`: die polnischen Substantive mit ihren sechs Formen und die Regeln, aus denen die Hinweise entstehen (`rulesFor`).
 - `tests/index.html`: prüft die Daten (zum Beispiel, dass jede regelmäßige polnische Form der Regel folgt, die ihr Hinweis nennt) und spielt in jedem Trainer eine Runde. Über HTTP öffnen, nicht direkt von der Festplatte, weil die Seiten in iframes geladen werden.
 

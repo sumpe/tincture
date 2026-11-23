@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Plural på svenska 🫎</title>
+<title>Svenska substantiv 🫎</title>
 <meta name="theme-color" content="#f7f3ec" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#19110c" media="(prefers-color-scheme: dark)">
 <link rel="stylesheet" href="../css/site.css">
@@ -39,6 +39,19 @@
 /* Swedish specifics */
 .keys{--keys:3;max-width:180px;margin:6px auto 0}
 #tbl td:first-child{min-width:9em}
+/* En or ett: the gap where the article goes, then the two answers side by side */
+.word .blank{display:inline-block;width:1.6em;border-bottom:2px solid var(--edge);vertical-align:.12em}
+.word .filled{color:var(--accent);font-weight:400}
+#pick{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:22px}
+#pick button{min-height:72px;border:1px solid var(--edge);border-radius:8px;background:var(--paper);font-size:1.7rem;font-weight:600;transition:background-color .15s,border-color .15s}
+#pick button:disabled{cursor:default}
+#pick button.ok{border-color:var(--ok);background:var(--okbg);color:var(--ok)}
+#pick button.bad{border-color:var(--bad);background:var(--badbg);color:var(--bad)}
+#pick button.was{border-color:var(--ok);border-style:dashed;color:var(--ok)}
+#pick .k{display:block;margin-top:2px;color:var(--muted);font-weight:400;font-style:italic;font-size:.8rem}
+#pick button.ok .k,#pick button.bad .k,#pick button.was .k{visibility:hidden}
+@media (hover:hover){#pick button:not(:disabled):hover{background:var(--hover);border-color:var(--muted)}}
+@media (pointer:coarse){#pick .k{display:none}}
 </style>
 </head>
 <body>
@@ -50,8 +63,8 @@
   </div>
 </div></nav>
 <header class="mast"><div class="in">
-  <h1 data-en="Swedish Plurals">Plural på svenska&nbsp;🫎</h1>
-  <p class="sub" id="sub" data-en="The levels go by how predictable the plural is, not by how hard the word is. Å, ä and ö count.">Nivåerna går efter hur förutsägbar pluralen är, inte efter hur svårt ordet är. Å, ä och ö räknas.</p>
+  <h1 data-en="Swedish Nouns">Svenska substantiv&nbsp;🫎</h1>
+  <p class="sub" id="sub" data-en="Two games: the plural, and en or ett. The levels go by how predictable the answer is, not by how hard the word is.">Två spel: pluralen, och en eller ett. Nivåerna går efter hur förutsägbart svaret är, inte efter hur svårt ordet är.</p>
   <nav class="tabs" aria-label="Avsnitt">
     <a href="#game" id="tab-game" aria-current="page" data-en="Practice">Träning</a>
     <a href="#tables" id="tab-tables" data-en="Tables">Tabeller</a>
@@ -59,12 +72,22 @@
 </div></header>
 <main>
   <section id="setup">
+    <span class="lbl" id="l-g" data-en="Game">Spel</span>
+    <div class="seg" id="game" role="group" aria-labelledby="l-g">
+      <button data-v="plural" class="on" aria-pressed="true" data-en="The plural">Plural</button>
+      <button data-v="genus" aria-pressed="false" data-en="En or ett">En eller ett</button>
+    </div>
     <span class="lbl" id="l-l" data-en="Level">Nivå</span>
-    <div class="seg tight" id="level" role="group" aria-labelledby="l-l">
+    <div class="seg tight" id="plural-level" role="group" aria-labelledby="l-l">
       <button data-v="easy" class="on" aria-pressed="true" data-en="Easy">Lätt</button>
       <button data-v="medium" aria-pressed="false" data-en="Medium">Medel</button>
       <button data-v="hard" aria-pressed="false" data-en="Hard">Svår</button>
       <button data-v="short" aria-pressed="false" data-en="One syllable">Enstaviga</button>
+    </div>
+    <div class="seg tight" id="genus-level" role="group" aria-labelledby="l-l" hidden>
+      <button data-v="easy" class="on" aria-pressed="true" data-en="Easy">Lätt</button>
+      <button data-v="medium" aria-pressed="false" data-en="Medium">Medel</button>
+      <button data-v="hard" aria-pressed="false" data-en="Hard">Svår</button>
     </div>
     <p class="hint" id="about" aria-live="polite"></p>
     <span class="lbl" id="l-n" data-en="Number of words">Antal ord</span>
@@ -81,10 +104,14 @@
   <section id="quiz" hidden>
     <div class="top"><span id="prog"></span><span id="score"></span></div>
     <div class="bar"><div id="fill"></div></div>
-    <p class="ask" data-en="The plural of">Plural av</p>
+    <p class="ask" id="ask"></p>
     <div class="word" id="word"></div>
     <input id="ans" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Plural">
     <div class="keys" id="keys" role="group" aria-label="Å, ä och ö"></div>
+    <div id="pick" role="group" aria-label="En eller ett" hidden>
+      <button data-v="en">en<span class="k" data-en="or press E">eller tryck E</span></button>
+      <button data-v="ett">ett<span class="k" data-en="or press T">eller tryck T</span></button>
+    </div>
     <div id="fb" class="fb" role="status" hidden></div>
     <button class="primary" id="go">Kontrollera</button>
   </section>
@@ -101,14 +128,22 @@
   </section>
 
   <section id="tbl-view" hidden>
-    <p class="sub" data-en="Choose a plural ending. The nouns are in alphabetical order; hover over a singular for the English.">Välj en pluraländelse. Orden står i bokstavsordning.</p>
-    <div class="seg tight" id="tgroup" role="group" aria-label="Pluraländelse">
+    <p class="sub" data-en="Choose a game, then a group. The nouns are in alphabetical order; hover over a singular for the English.">Välj ett spel och sedan en grupp. Orden står i bokstavsordning.</p>
+    <div class="seg" id="tgame" role="group" aria-label="Spel">
+      <button data-v="plural" class="on" aria-pressed="true" data-en="The plural">Plural</button>
+      <button data-v="genus" aria-pressed="false" data-en="En or ett">En eller ett</button>
+    </div>
+    <div class="seg tight" id="tplural" role="group" aria-label="Pluraländelse">
       <button data-v="or" class="on" aria-pressed="true" data-en="Plural in -or">-or</button>
       <button data-v="ar" aria-pressed="false" data-en="Plural in -ar">-ar</button>
       <button data-v="er" aria-pressed="false" data-en="Plural in -er or -r">-er</button>
       <button data-v="n" aria-pressed="false" data-en="Plural in -n">-n</button>
       <button data-v="0" aria-pressed="false" data-en="No ending">Ingen</button>
       <button data-v="x" aria-pressed="false" data-en="The rest: vowel changes and oddities">Övriga</button>
+    </div>
+    <div class="seg tight" id="tgenus" role="group" aria-label="En eller ett" hidden>
+      <button data-v="en" class="on" aria-pressed="true" data-en="En-words">En-ord</button>
+      <button data-v="ett" aria-pressed="false" data-en="Ett-words">Ett-ord</button>
     </div>
     <p class="hint" id="tabout"></p>
     <p class="count" id="tcount"></p>
