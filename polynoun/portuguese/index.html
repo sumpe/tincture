@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Substantivos portugueses 🐟</title>
+<meta name="theme-color" content="#f7f3ec" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#19110c" media="(prefers-color-scheme: dark)">
+<link rel="stylesheet" href="../css/site.css">
+<link rel="stylesheet" href="../css/trainer.css">
+<style>
+:root{
+  --accent:#2d6a4f;
+  --fill:#2d6a4f;
+  --fill-hi:#255a42;
+  --tint:#dfe8dc;
+  --ring:rgba(45,106,79,.22);
+  --tag:#9c3a27;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --accent:#8cc7a4;
+    --fill:#357a5a;
+    --fill-hi:#3d8866;
+    --tint:#22352a;
+    --ring:rgba(140,199,164,.25);
+    --tag:#eb9a84;
+  }
+}
+:root[data-theme="dark"]{
+  --accent:#8cc7a4;
+  --fill:#357a5a;
+  --fill-hi:#3d8866;
+  --tint:#22352a;
+  --ring:rgba(140,199,164,.25);
+  --tag:#eb9a84;
+}
+
+/* Portuguese specifics */
+.keys{--keys:12}
+@media (max-width:480px){.keys{--keys:6}}
+#tbl td:first-child{min-width:9em}
+</style>
+</head>
+<body>
+<nav class="nav" aria-label="Polynoun"><div class="in">
+  <a class="brand" href="../index.html">Polynoun</a>
+  <div class="langs">
+    <a href="../portuguese/index.html" lang="pt-PT" aria-current="page" data-en="Portuguese"><span class="fl pt" aria-hidden="true"></span>Português</a>
+    <a href="../polish/index.html" lang="pl" data-en="Polish"><span class="fl pl" aria-hidden="true"></span>Polski</a>
+    <a href="../swedish/index.html" lang="sv" data-en="Swedish"><span class="fl sv" aria-hidden="true"></span>Svenska</a>
+  </div>
+</div></nav>
+<header class="mast"><div class="in">
+  <h1 data-en="Portuguese Nouns">Substantivos portugueses&nbsp;🐟</h1>
+  <p class="sub" id="sub" data-en="Two games: the plural, and o or a. The levels go by how predictable the answer is, not by how hard the word is. Accents count.">Dois jogos: o plural, e o ou a. Os níveis vão pela previsibilidade da resposta, não pela dificuldade da palavra. Os acentos contam.</p>
+  <nav class="tabs" aria-label="Secções">
+    <a href="#game" id="tab-game" aria-current="page" data-en="Practice">Treino</a>
+    <a href="#tables" id="tab-tables" data-en="Tables">Tabelas</a>
+  </nav>
+</div></header>
+<main>
+  <section id="setup">
+    <span class="lbl" id="l-g" data-en="Game">Jogo</span>
+    <div class="seg" id="game" role="group" aria-labelledby="l-g">
+      <button data-v="plural" class="on" aria-pressed="true" data-en="The plural">Plural</button>
+      <button data-v="gender" aria-pressed="false" data-en="Gender: o or a">O ou a</button>
+    </div>
+    <span class="lbl" id="l-l" data-en="Level">Nível</span>
+    <div class="seg tight" id="plural-level" role="group" aria-labelledby="l-l">
+      <button data-v="easy" class="on" aria-pressed="true" data-en="Easy">Fácil</button>
+      <button data-v="medium" aria-pressed="false" data-en="Medium">Médio</button>
+      <button data-v="hard" aria-pressed="false" data-en="Hard">Difícil</button>
+      <button data-v="ao" aria-pressed="false" data-en="Words in -ão">-ão</button>
+    </div>
+    <div class="seg tight" id="gender-level" role="group" aria-labelledby="l-l" hidden>
+      <button data-v="easy" class="on" aria-pressed="true" data-en="Easy">Fácil</button>
+      <button data-v="medium" aria-pressed="false" data-en="Medium">Médio</button>
+      <button data-v="hard" aria-pressed="false" data-en="Hard">Difícil</button>
+    </div>
+    <p class="hint" id="about" aria-live="polite"></p>
+    <span class="lbl" id="l-n" data-en="Number of words">Número de palavras</span>
+    <div class="seg" id="count" role="group" aria-labelledby="l-n">
+      <button data-v="10" aria-pressed="false">10</button>
+      <button data-v="20" class="on" aria-pressed="true">20</button>
+      <button data-v="30" aria-pressed="false">30</button>
+      <button data-v="40" aria-pressed="false">40</button>
+      <button data-v="50" aria-pressed="false">50</button>
+    </div>
+    <button class="primary" id="start" data-en="Start">Começar</button>
+  </section>
+
+  <section id="quiz" hidden>
+    <div class="top"><span id="prog"></span><span id="score"></span></div>
+    <div class="bar"><div id="fill"></div></div>
+    <p class="ask" id="ask"></p>
+    <div class="word" id="word"></div>
+    <input id="ans" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Plural">
+    <div class="keys" id="keys" role="group" aria-label="Letras com acento"></div>
+    <div id="pick" role="group" aria-label="O ou a" hidden>
+      <button data-v="o">o<span class="k key" data-en="or press O">ou prime O</span></button>
+      <button data-v="a">a<span class="k key" data-en="or press A">ou prime A</span></button>
+    </div>
+    <div id="fb" class="fb" role="status" hidden></div>
+    <button class="primary" id="go">Verificar</button>
+  </section>
+
+  <section id="done" hidden>
+    <div id="res"></div>
+    <div id="pct"></div>
+    <p id="misshead" data-en="To review">Para rever</p>
+    <table id="miss">
+      <thead><tr><th scope="col" data-en="singular">singular</th><th scope="col" data-en="plural">plural</th></tr></thead>
+    </table>
+    <button class="primary" id="again" data-en="Play again">Jogar outra vez</button>
+    <button class="ghost" id="change" data-en="Change options">Alterar opções</button>
+  </section>
+
+  <section id="tbl-view" hidden>
+    <p class="sub" data-en="Choose a game, then a group. The nouns are in alphabetical order; hover over a singular for the English.">Escolhe um jogo e depois um grupo. As palavras estão por ordem alfabética.</p>
+    <div class="seg" id="tgame" role="group" aria-label="Jogo">
+      <button data-v="plural" class="on" aria-pressed="true" data-en="The plural">Plural</button>
+      <button data-v="gender" aria-pressed="false" data-en="Gender: o or a">O ou a</button>
+    </div>
+    <div class="seg tight" id="tplural" role="group" aria-label="Terminação do plural">
+      <button data-v="s" class="on" aria-pressed="true" data-en="Plural in -s">-s</button>
+      <button data-v="ns" aria-pressed="false" data-en="Plural in -ns">-ns</button>
+      <button data-v="es" aria-pressed="false" data-en="Plural in -es">-es</button>
+      <button data-v="is" aria-pressed="false" data-en="Plural in -is">-is</button>
+      <button data-v="0" aria-pressed="false" data-en="No change">Igual</button>
+      <button data-v="ão" aria-pressed="false" data-en="Words in -ão">-ão</button>
+      <button data-v="x" aria-pressed="false" data-en="The rest: compounds, diminutives and irregulars">Outros</button>
+    </div>
+    <div class="seg tight" id="tgender" role="group" aria-label="Género" hidden>
+      <button data-v="o" class="on" aria-pressed="true" data-en="Masculine">Masculinas</button>
+      <button data-v="a" aria-pressed="false" data-en="Feminine">Femininas</button>
+    </div>
+    <p class="hint" id="tabout"></p>
+    <p class="count" id="tcount"></p>
+    <div class="tw"><table id="tbl"></table></div>
+    <a class="link back" href="#game" data-en="Back to the game">Voltar ao jogo</a>
+  </section>
+</main>
+<footer class="foot">By Peter S</footer>
+
+<script src="../js/gloss.js"></script>
+<script src="nouns.js"></script>
+<script src="../js/trainer.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
