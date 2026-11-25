@@ -2,7 +2,7 @@
 
 Treinos de conjugação verbal, cada um numa só página.
 
-- **Português europeu** (`portuguese/index.html`): nove tempos do indicativo, condicional e conjuntivo, incluindo o futuro do conjuntivo. Verbos regulares e irregulares, formas de *vós* opcionais e tabelas de verbos com comparação com o espanhol.
+- **Português** (`portuguese/index.html`): nove tempos do indicativo, condicional e conjuntivo, incluindo o futuro do conjuntivo. Verbos regulares e irregulares, em português europeu (com formas de *vós* opcionais) ou do Brasil (sem *tu* nem *vós*), e tabelas de verbos com comparação opcional com o espanhol. As duas escolhas ficam guardadas no browser.
 - **Polaco** (`polish/index.html`): verbos regulares em -ać, -ować e -ić/-yć no presente, no passado, no futuro e no condicional, com as formas de cada género.
 - **Sueco** (`swedish/index.html`): os tempos principais (presens, preteritum e supinum) de 483 verbos, das quatro conjugações: os mais comuns no treino por omissão, todos nas tabelas, por ordem alfabética.
 

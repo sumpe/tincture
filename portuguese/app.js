@@ -23,7 +23,7 @@ const PERSONS_EN = [
 ];
 const PRONOUNS_SHORT = ["eu", "tu", "ele", "nós", "vós", "eles"];
 const PRONOUNS_SHORT_EN = ["I", "you", "he", "we", "you all", "they"];
-const VOS = 4;
+const TU = 1, VOS = 4;
 
 // The verb groups on the setup screen. The regular group's three model verbs are swapped,
 // question by question, for regular verbs drawn from REGULAR_VERBS.
@@ -64,8 +64,30 @@ function conjugateRegular(verb) {
     tense in ENDINGS_ON_INFINITIVE ? attach(verb, ENDINGS_ON_INFINITIVE[tense]) : attach(stem, endings.split(" ")));
 }
 
+// ---- European or Brazilian ----
+
+// Brazilian Portuguese has no tu or vós forms here (você and vocês take the third person),
+// and writes the -ar preterite's "nós" form only as "cantamos", never "cantámos".
+let variant = loadSetting("variant", "pe"); // "pe" or "br"
+const isBrazilian = () => variant === "br";
+const personsInUse = () => PERSONS.map((_, person) => person).filter(person => !isBrazilian() || (person !== TU && person !== VOS));
+
+// The settings that outlast a visit. localStorage can be missing or refused (some browsers, files opened from disk).
+function loadSetting(name, fallback) {
+  try { return localStorage.getItem("polyverb-pt-" + name) ?? fallback; } catch { return fallback; }
+}
+function saveSetting(name, value) {
+  try { localStorage.setItem("polyverb-pt-" + name, value); } catch { /* not remembered, that's all */ }
+}
+
+// One person's forms, "cantámos/cantamos" → ["cantámos", "cantamos"], as the chosen variant writes them
+function variantForms(personForms) {
+  const forms = personForms.split("/");
+  return isBrazilian() && forms.length > 1 ? forms.filter(form => !form.endsWith("ámos")) : forms;
+}
+
 // One tense's string, "cantei cantaste cantou cantámos/cantamos …", and a person → ["cantámos", "cantamos"]
-const answersFor = (tenseForms, person) => tenseForms.split(" ")[person].split("/");
+const answersFor = (tenseForms, person) => variantForms(tenseForms.split(" ")[person]);
 
 // ---- Where a wrong answer belongs ----
 
@@ -148,6 +170,20 @@ let questionCount = 20;
 let chosenGroups = ["regular", "essential"];
 
 singleChoice("seg", value => { questionCount = Number(value); });
+singleChoice("variant", value => { variant = value; saveSetting("variant", value); showVariant(); });
+
+// The variant shows in the subtitle and the page language; the vós switch only matters in European.
+const SUBTITLES = {
+  pe: ["Português europeu. Escreve a forma verbal; os acentos contam.", "European Portuguese. Type the verb form; accents count."],
+  br: ["Português do Brasil. Escreve a forma verbal; os acentos contam.", "Brazilian Portuguese. Type the verb form; accents count."]
+};
+function showVariant() {
+  document.querySelectorAll("#variant button").forEach(button => setPressed(button, button.dataset.v === variant));
+  setText(byId("sub"), ...SUBTITLES[variant]);
+  document.documentElement.lang = isBrazilian() ? "pt-BR" : "pt-PT";
+  byId("vos-row").hidden = isBrazilian();
+}
+showVariant();
 multiChoice(
   byId("kinds"),
   Object.keys(GROUP_NAMES).map(group => ({ value: group, label: GROUP_NAMES[group], english: GROUP_NAMES_EN[group] })),
@@ -163,15 +199,13 @@ let phase = ""; // "ask" while the player types, "review" while the answer shows
 function startRound() {
   const includeVos = byId("vos").checked;
   const skipFutureAndConditional = byId("syn").checked;
+  const persons = personsInUse().filter(person => person !== VOS || includeVos);
   const candidates = [];
   for (const verb in VERB_TABLES) {
     if (!chosenGroups.includes(GROUP_OF_VERB[verb])) continue;
     VERB_TABLES[verb].forEach((tenseForms, tense) => {
       if (skipFutureAndConditional && (tense === FUTURE || tense === CONDITIONAL)) return;
-      tenseForms.split(" ").forEach((personForms, person) => {
-        if (person === VOS && !includeVos) return;
-        candidates.push({ verb, tense, person, answers: personForms.split("/") });
-      });
+      for (const person of persons) candidates.push({ verb, tense, person, answers: answersFor(tenseForms, person) });
     });
   }
   questions = shuffled(candidates).slice(0, questionCount);
@@ -349,37 +383,66 @@ function spanishForms(verb, tense) {
 
 // ---- Tables ----
 
-const withSpanishName = verb => verb + (SPANISH_INFINITIVES[verb] ? " / " + SPANISH_INFINITIVES[verb] : "");
 let tableVerbs = ["cantar"];
+let showSpanish = loadSetting("spanish", "on") === "on";
+const withSpanishName = verb => verb + (showSpanish && SPANISH_INFINITIVES[verb] ? " / " + SPANISH_INFINITIVES[verb] : "");
 
-// The verb buttons above the table, under a heading for each group
+const spanishSwitch = byId("es");
+spanishSwitch.checked = showSpanish;
+spanishSwitch.onchange = () => {
+  showSpanish = spanishSwitch.checked;
+  saveSetting("spanish", showSpanish ? "on" : "off");
+  buildTableChoices();
+  buildTables();
+};
+
+// The verb buttons above the table, under a heading for each group. They're rebuilt when
+// Spanish is turned on or off, since their names carry the Spanish infinitive only while it shows.
 const tableVerbChips = byId("vchips");
-const paintTableChoices = Object.keys(VERB_GROUPS).map(group => {
-  tableVerbChips.appendChild(withEnglish(makeElement("span", "gl", GROUP_NAMES[group]), GROUP_NAMES_EN[group]));
-  return multiChoice(
-    tableVerbChips,
-    VERB_GROUPS[group].map(verb => ({ value: verb, label: withSpanishName(verb) })),
-    () => tableVerbs,
-    chosen => { tableVerbs = chosen; buildTables(); }
-  );
-});
+let paintTableChoices = [];
+function buildTableChoices() {
+  tableVerbChips.textContent = "";
+  paintTableChoices = Object.keys(VERB_GROUPS).map(group => {
+    tableVerbChips.appendChild(withEnglish(makeElement("span", "gl", GROUP_NAMES[group]), GROUP_NAMES_EN[group]));
+    return multiChoice(
+      tableVerbChips,
+      VERB_GROUPS[group].map(verb => ({ value: verb, label: withSpanishName(verb) })),
+      () => tableVerbs,
+      chosen => { tableVerbs = chosen; buildTables(); }
+    );
+  });
+}
+buildTableChoices();
 
 function buildTables() {
   paintTableChoices.forEach(paint => paint());
+  const variantName = isBrazilian() ? ["Português do Brasil", "Brazilian Portuguese"] : ["Português europeu", "European Portuguese"];
+  const abbreviation = isBrazilian() ? "PB" : "PE";
+  setText(byId("tbl-sub"),
+    "Escolhe um ou mais verbos. " + (showSpanish ? `${variantName[0]} (${abbreviation}) primeiro, espanhol (ES) depois.` : variantName[0] + "."),
+    "Choose one or more verbs. " + (showSpanish ? `${variantName[1]} (${abbreviation}) first, then Spanish (ES).` : variantName[1] + "."));
+  byId("es-hint").hidden = !showSpanish;
+
   const verbs = Object.keys(VERB_TABLES).filter(verb => tableVerbs.includes(verb));
+  const persons = personsInUse();
   const table = byId("tbl");
   table.textContent = "";
-  table.style.minWidth = (70 + verbs.length * 280) + "px";
+  table.style.minWidth = (70 + verbs.length * (showSpanish ? 280 : 150)) + "px";
 
-  const header = table.createTHead(), verbRow = header.insertRow(), languageRow = header.insertRow();
+  const header = table.createTHead(), verbRow = header.insertRow();
   verbRow.appendChild(makeElement("th"));
-  languageRow.appendChild(makeElement("th"));
   for (const verb of verbs) {
     const verbHeading = makeElement("th", "vh", withSpanishName(verb));
-    verbHeading.colSpan = 2;
+    if (showSpanish) verbHeading.colSpan = 2;
     verbRow.appendChild(verbHeading);
-    languageRow.appendChild(setText(makeElement("th", "pt"), "PE", "European Portuguese"));
-    languageRow.appendChild(setText(makeElement("th", "es"), "ES", "Spanish"));
+  }
+  if (showSpanish) {
+    const languageRow = header.insertRow();
+    languageRow.appendChild(makeElement("th"));
+    for (const verb of verbs) {
+      languageRow.appendChild(setText(makeElement("th", "pt"), abbreviation, variantName[1]));
+      languageRow.appendChild(setText(makeElement("th", "es"), "ES", "Spanish"));
+    }
   }
 
   const body = table.createTBody();
@@ -387,22 +450,23 @@ function buildTables() {
     const tenseRow = body.insertRow();
     tenseRow.className = "tg" + (isSubjunctive(tense) ? " sj" : "");
     const tenseCell = tenseRow.insertCell();
-    tenseCell.colSpan = 1 + verbs.length * 2;
+    tenseCell.colSpan = 1 + verbs.length * (showSpanish ? 2 : 1);
     tenseCell.appendChild(withEnglish(setTextMarkingSubjunctive(makeElement("span", "tl"), name), TENSES_EN[tense]));
 
-    const columns = verbs.map(verb => ({ portuguese: VERB_TABLES[verb][tense].split(" "), spanish: spanishForms(verb, tense) }));
-    PERSONS.forEach((person, k) => {
+    const columns = verbs.map(verb => ({ portuguese: VERB_TABLES[verb][tense], spanish: showSpanish && spanishForms(verb, tense) }));
+    for (const person of persons) {
       const row = body.insertRow();
-      setText(row.insertCell(), person.label, PERSONS_EN[k].label);
+      setText(row.insertCell(), PERSONS[person].label, PERSONS_EN[person].label);
       for (const { portuguese, spanish } of columns) {
         const portugueseCell = row.insertCell();
         portugueseCell.className = "pt";
-        portugueseCell.textContent = portuguese[k].replace("/", " / ");
+        portugueseCell.textContent = answersFor(portuguese, person).join(" / ");
+        if (!spanish) continue;
         const spanishCell = row.insertCell();
         spanishCell.className = "es";
-        spanishCell.textContent = spanish[k];
+        spanishCell.textContent = spanish[person];
       }
-    });
+    }
   });
 }
 

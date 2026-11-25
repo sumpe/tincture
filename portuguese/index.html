@@ -62,9 +62,11 @@
 .switch input:checked+.track::after{transform:translateX(18px)}
 .switch input:focus-visible+.track{outline:2px solid var(--focus);outline-offset:2px}
 #start{margin-top:22px}
+#vchips{margin-bottom:10px}
+#es-row{margin-bottom:18px;border-bottom:1px solid var(--line)}
 .gl{flex:0 0 100%;margin-top:8px;color:var(--muted);font-style:italic;font-size:.94rem}
 .gl:first-child{margin-top:0}
-thead tr:first-child th{border-bottom:0;padding-bottom:2px}
+thead tr:first-child:not(:last-child) th{border-bottom:0;padding-bottom:2px}
 thead tr:nth-child(2) th{color:var(--muted);font-weight:400;font-style:italic;font-size:.9rem;text-align:center}
 th.pt,td.pt{background:var(--col-pt);border-left:1px solid var(--line)}
 th.es,td.es{background:var(--col-es)}
@@ -92,6 +94,11 @@ th.es,td.es{background:var(--col-es)}
 <main>
 
   <section id="setup">
+    <span class="lbl" id="l-var" data-en="Variety">Variante</span>
+    <div class="seg" id="variant" role="group" aria-labelledby="l-var">
+      <button data-v="pe" class="on" aria-pressed="true" data-en="European">Europeu</button>
+      <button data-v="br" aria-pressed="false" data-en="Brazilian: no tu or vós forms">Brasileiro</button>
+    </div>
     <span class="lbl" id="l-n" data-en="Number of questions">Número de formas</span>
     <div class="seg" id="seg" role="group" aria-labelledby="l-n">
       <button data-v="10" aria-pressed="false">10</button>
@@ -101,7 +108,7 @@ th.es,td.es{background:var(--col-es)}
     <span class="lbl" id="l-k" data-en="Verbs">Verbos</span>
     <div class="chips four tight" id="kinds" role="group" aria-labelledby="l-k"></div>
     <p class="hint" data-en="Regular: many verbs in -ar, -er and -ir. Essential: ser, estar, ter, haver, pôr, ir. Common: fazer, dizer, dar, ver, vir, poder, querer, saber. Supplementary: trazer, ler, sair, ouvir, pedir, dormir.">Regulares: muitos verbos em -ar, -er e -ir. Essenciais: ser, estar, ter, haver, pôr, ir. Frequentes: fazer, dizer, dar, ver, vir, poder, querer, saber. Complementares: trazer, ler, sair, ouvir, pedir, dormir.</p>
-    <label class="switch">
+    <label class="switch" id="vos-row">
       <input type="checkbox" id="vos" checked>
       <span class="track"></span>
       <span data-en="Include the vós forms (2nd person plural)">Incluir formas de <i>vós</i> (2.ª pl.)</span>
@@ -141,10 +148,15 @@ th.es,td.es{background:var(--col-es)}
   </section>
 
   <section id="tbl-view" data-wide hidden>
-    <p class="sub" data-en="Choose one or more verbs. European Portuguese (PE) first, then Spanish (ES).">Escolhe um ou mais verbos. Português europeu (PE) primeiro, espanhol (ES) depois.</p>
+    <p class="sub" id="tbl-sub"></p>
     <div class="chips" id="vchips" role="group" aria-label="Verbos"></div>
+    <label class="switch" id="es-row">
+      <input type="checkbox" id="es">
+      <span class="track"></span>
+      <span data-en="Compare with Spanish">Comparar com o espanhol</span>
+    </label>
     <div class="tw"><table id="tbl"></table></div>
-    <p class="hint" data-en="The Portuguese simple pluperfect has no Spanish equivalent; Spanish uses «había cantado». The Spanish imperfect subjunctive has two forms (-ra / -se). The Spanish future subjunctive is archaic and appears almost only in legal and literary texts.">O mais-que-perfeito simples português não tem equivalente em espanhol, que usa «había cantado». O imperfeito do conjuntivo espanhol tem duas formas (-ra / -se). O futuro do conjuntivo espanhol é arcaico e quase só aparece em textos jurídicos e literários.</p>
+    <p class="hint" id="es-hint" data-en="The Portuguese simple pluperfect has no Spanish equivalent; Spanish uses «había cantado». The Spanish imperfect subjunctive has two forms (-ra / -se). The Spanish future subjunctive is archaic and appears almost only in legal and literary texts.">O mais-que-perfeito simples português não tem equivalente em espanhol, que usa «había cantado». O imperfeito do conjuntivo espanhol tem duas formas (-ra / -se). O futuro do conjuntivo espanhol é arcaico e quase só aparece em textos jurídicos e literários.</p>
     <a class="link back" href="#game" data-en="Back to the game">Voltar ao jogo</a>
   </section>
 </main>
