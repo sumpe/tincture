@@ -192,8 +192,22 @@ function checkPlural() {
   } else if (!right && accepts(noun.plural, bare)) {
     notes.push([`O plural certo, mas o artigo é ${pluralArticle(noun)}.`, `The right plural, but the article is ${pluralArticle(noun)}.`]);
   }
+  notes.push(...otherForms(noun, typed, right));
   if (noun.spanish) notes.push([`Em espanhol: ${noun.spanish}.`, `In Spanish: ${noun.spanish}.`]);
   finishQuestion(noun, typed, right, answer, notes, noun.hint);
+}
+
+// When more than one plural is right: after a right answer, the others; after a wrong one, that all of them count
+function otherForms(noun, typed, right) {
+  const forms = spellings(noun.plural);
+  if (forms.length < 2) return [];
+  if (!right) {
+    return forms.length === 2
+      ? [["As duas formas estão certas.", "Both forms are right."]]
+      : [[`As ${forms.length === 3 ? "três" : forms.length} formas estão certas.`, `All ${forms.length} forms are right.`]];
+  }
+  const others = forms.filter(form => !acceptsPlural({ ...noun, plural: form }, typed)).join(" ou ");
+  return [[`Também está certo: ${others}.`, `Also right: ${others.replace(/ ou /g, " or ")}.`]];
 }
 
 // O or a: the chosen article; the blank fills in with the right one

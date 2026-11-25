@@ -400,6 +400,19 @@ async function playGames() {
     check("Portuguese game", round.notes.every(Boolean), `${level}: a question had no rule`);
     pt.document.getElementById("change").click();
   }
+  // A plural with more than one right form says so, after a right answer and after a wrong one
+  const doc = pt.document;
+  doc.getElementById("start").click();
+  for (const noun of pt.eval(`[...new Map(Object.values(PLURAL_NOUNS).flat().filter(n => n.plural.includes("/")).map(n => [n.singular, n])).values()]`)) {
+    const forms = noun.plural.split("/");
+    for (const [typed, expect] of [[forms.at(-1), "Também está certo: " + forms.slice(0, -1).join(" ou ")], ["xyz", "formas estão certas"]]) {
+      pt.eval(`questions = [PLURAL_NOUNS.hard.concat(PLURAL_NOUNS.ao).find(n => n.singular === ${JSON.stringify(noun.singular)})]; questionIndex = 0; showQuestion()`);
+      doc.getElementById("ans").value = typed;
+      doc.getElementById("go").click();
+      check("Portuguese game: more than one plural", doc.getElementById("fb").textContent.includes(expect), `${noun.singular}, typed "${typed}": no "${expect}"`);
+    }
+  }
+  doc.getElementById("change").click();
   check("Portuguese game", pt.eval(`[["os livros", true], ["as livros", false], ["livros", true], ["o livro", false]]
     .every(([typed, ok]) => acceptsPlural(PLURAL_NOUNS.easy.find(n => n.base === "livro"), typed) === ok)`), "the article in a typed plural");
   // O or a: click the right button on every other question, and once press O or A instead
