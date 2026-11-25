@@ -186,7 +186,7 @@ function showQuestion() {
   phase = "ask";
   setText(progress, `Pytanie ${number} z ${total}`, `Question ${number} of ${total}`);
   showScore();
-  progressBar.style.width = (questionIndex / total * 100) + "%";
+  showProgress(progressBar, questionIndex, score, total);
   feedback.hidden = true;
   const word = byId("word");
   if (roundMode === "gender") {
@@ -264,7 +264,7 @@ function finishQuestion(right, typed, answer, notes, [polish, english]) {
   feedback.append(setText(makeElement("span", "rule"), polish, english));
 
   showScore();
-  progressBar.style.width = ((questionIndex + 1) / questions.length * 100) + "%";
+  showProgress(progressBar, questionIndex + 1, score, questions.length);
   const isLast = questionIndex === questions.length - 1;
   setText(mainButton, isLast ? "Zobacz wynik" : "Dalej", isLast ? "See your score" : "Next");
   phase = "review";

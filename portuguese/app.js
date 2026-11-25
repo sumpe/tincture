@@ -151,7 +151,7 @@ function showQuestion() {
   phase = "ask";
   setText(progress, `Pergunta ${number} de ${total}`, `Question ${number} of ${total}`);
   showScore();
-  progressBar.style.width = (questionIndex / total * 100) + "%";
+  showProgress(progressBar, questionIndex, score, total);
   const word = byId("word");
   word.textContent = "";
   feedback.hidden = true;
@@ -231,7 +231,7 @@ function finishQuestion(noun, typed, right, answer, notes, [portuguese, english]
   feedback.append(setText(makeElement("span", "rule"), portuguese, english));
 
   showScore();
-  progressBar.style.width = ((questionIndex + 1) / questions.length * 100) + "%";
+  showProgress(progressBar, questionIndex + 1, score, questions.length);
   const isLast = questionIndex === questions.length - 1;
   setText(mainButton, isLast ? "Ver resultados" : "Seguinte", isLast ? "See results" : "Next");
   phase = "review";

@@ -103,6 +103,13 @@ function multiChoice(container, options, getChosen, setChosen) {
   return paint;
 }
 
+// The progress bar: as long as the share of questions answered, green for the right answers
+// first, then red for the wrong ones.
+function showProgress(bar, answered, right, total) {
+  bar.style.width = (answered / total * 100) + "%";
+  bar.style.setProperty("--right", (answered ? right / answered * 100 : 100) + "%");
+}
+
 // ---- Sections ----
 
 // Setup, quiz or results; or the tables, whenever the address ends in #tables.
