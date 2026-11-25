@@ -1,4 +1,4 @@
-# Piotrek's Tincture
+# The Tincture Project
 
 Grammar drills, each on a single page.
 
