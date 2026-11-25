@@ -170,7 +170,15 @@ let questionCount = 20;
 let chosenGroups = ["regular", "essential"];
 
 singleChoice("seg", value => { questionCount = Number(value); });
-singleChoice("variant", value => { variant = value; saveSetting("variant", value); showVariant(); });
+// The variant can be chosen on the setup screen or above the tables; both trays show the same choice.
+function chooseVariant(value) {
+  variant = value;
+  saveSetting("variant", value);
+  showVariant();
+  if (location.hash === "#tables") buildTables();
+}
+singleChoice("variant", chooseVariant);
+singleChoice("tbl-variant", chooseVariant);
 
 // The variant shows in the subtitle and the page language; the vós switch only matters in European.
 const SUBTITLES = {
@@ -178,7 +186,7 @@ const SUBTITLES = {
   br: ["Português do Brasil. Escreve a forma verbal; os acentos contam.", "Brazilian Portuguese. Type the verb form; accents count."]
 };
 function showVariant() {
-  document.querySelectorAll("#variant button").forEach(button => setPressed(button, button.dataset.v === variant));
+  document.querySelectorAll("#variant button, #tbl-variant button").forEach(button => setPressed(button, button.dataset.v === variant));
   setText(byId("sub"), ...SUBTITLES[variant]);
   document.documentElement.lang = isBrazilian() ? "pt-BR" : "pt-PT";
   byId("vos-row").hidden = isBrazilian();
@@ -419,8 +427,8 @@ function buildTables() {
   const variantName = isBrazilian() ? ["Português do Brasil", "Brazilian Portuguese"] : ["Português europeu", "European Portuguese"];
   const abbreviation = isBrazilian() ? "PB" : "PE";
   setText(byId("tbl-sub"),
-    "Escolhe um ou mais verbos. " + (showSpanish ? `${variantName[0]} (${abbreviation}) primeiro, espanhol (ES) depois.` : variantName[0] + "."),
-    "Choose one or more verbs. " + (showSpanish ? `${variantName[1]} (${abbreviation}) first, then Spanish (ES).` : variantName[1] + "."));
+    "Escolhe um ou mais verbos." + (showSpanish ? ` ${variantName[0]} (${abbreviation}) primeiro, espanhol (ES) depois.` : ""),
+    "Choose one or more verbs." + (showSpanish ? ` ${variantName[1]} (${abbreviation}) first, then Spanish (ES).` : ""));
   byId("es-hint").hidden = !showSpanish;
 
   const verbs = Object.keys(VERB_TABLES).filter(verb => tableVerbs.includes(verb));
