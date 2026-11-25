@@ -285,7 +285,7 @@ function showQuestion() {
   phase = "ask";
   setText(progress, `Pergunta ${number} de ${total}`, `Question ${number} of ${total}`);
   showScore();
-  progressBar.style.width = (questionIndex / total * 100) + "%";
+  showProgress(progressBar, questionIndex, score, total);
   setText(byId("verb"), question.verb, ENGLISH[question.verb]);
   const tenseLabel = byId("tense");
   withEnglish(setTextMarkingSubjunctive(tenseLabel, TENSES[question.tense]), TENSES_EN[question.tense]);
@@ -340,7 +340,7 @@ function checkAnswer() {
     }
   }
   showScore();
-  progressBar.style.width = ((questionIndex + 1) / questions.length * 100) + "%";
+  showProgress(progressBar, questionIndex + 1, score, questions.length);
   const isLast = questionIndex === questions.length - 1;
   setText(mainButton, isLast ? "Ver resultados" : "Seguinte", isLast ? "See results" : "Next");
   phase = "review";

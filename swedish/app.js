@@ -141,7 +141,7 @@ function showQuestion() {
   phase = "ask";
   setText(progress, `Fråga ${number} av ${total}`, `Question ${number} of ${total}`);
   showScore();
-  progressBar.style.width = (questionIndex / total * 100) + "%";
+  showProgress(progressBar, questionIndex, score, total);
   setText(verbLabel, verb.infinitive, verb.english);
   answerInputs.forEach((input, k) => {
     input.value = "";
@@ -187,7 +187,7 @@ function checkAnswer() {
     ? setText(makeElement("span"), "Rätt", "Correct")
     : setText(makeElement("span"), `${rightCount} av 3 rätt`, `${rightCount} of 3 correct`));
   showScore();
-  progressBar.style.width = ((questionIndex + 1) / questions.length * 100) + "%";
+  showProgress(progressBar, questionIndex + 1, score, questions.length);
   const isLast = questionIndex === questions.length - 1;
   setText(mainButton, isLast ? "Se resultatet" : "Nästa", isLast ? "See your score" : "Next");
   phase = "review";

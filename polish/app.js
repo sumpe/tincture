@@ -195,7 +195,7 @@ function showQuestion() {
   phase = "ask";
   setText(progress, `Pytanie ${number} z ${total}`, `Question ${number} of ${total}`);
   showScore();
-  progressBar.style.width = (questionIndex / total * 100) + "%";
+  showProgress(progressBar, questionIndex, score, total);
   setText(byId("verb"), question.verb, ENGLISH[question.verb]);
   setText(byId("tense"), TENSES[question.tense], TENSES_EN[question.tense]);
   setText(byId("who"), question.label, question.english);
@@ -244,7 +244,7 @@ function checkAnswer() {
     }
   }
   showScore();
-  progressBar.style.width = ((questionIndex + 1) / questions.length * 100) + "%";
+  showProgress(progressBar, questionIndex + 1, score, questions.length);
   const isLast = questionIndex === questions.length - 1;
   setText(mainButton, isLast ? "Zobacz wynik" : "Dalej", isLast ? "See your score" : "Next");
   phase = "review";
