@@ -1,6 +1,6 @@
 # The Tincture Project
 
-Grammar drills, each on a single page.
+Grammar drills games.
 
 - **[Polyverb](polyverb/)**: verb conjugation in Portuguese, Polish and Swedish.
 - **[Polynoun](polynoun/)**: noun plurals, cases and gender in Portuguese, Polish and Swedish.
