@@ -144,6 +144,37 @@ function describeInEnglish(matches) {
   ).join("; ");
 }
 
+// ---- Slips in a regular verb's stem ----
+
+// True when a and b differ by one letter: one missing, one extra, one wrong, or two side by side swapped.
+function isOneSlipApart(a, b) {
+  if (a === b || Math.abs(a.length - b.length) > 1) return false;
+  if (a.length === b.length) {
+    const differ = [...a].map((letter, k) => letter !== b[k] ? k : -1).filter(k => k >= 0);
+    if (differ.length === 1) return true;
+    const [first, second] = differ;
+    return differ.length === 2 && second === first + 1 && a[first] === b[second] && a[second] === b[first];
+  }
+  const [shorter, longer] = a.length < b.length ? [a, b] : [a, b].reverse();
+  for (let k = 0; k < longer.length; k++) {
+    if (longer.slice(0, k) + longer.slice(k + 1) === shorter) return true;
+  }
+  return false;
+}
+
+// A regular verb's stem is only spelling; its ending is what's being practised. So one slip in
+// the stem ("esreverem" for "escreverem") still counts, as long as the ending is exactly right.
+// Returns the answer the player meant, or null.
+function answerWithStemSlip(typed, question) {
+  if (!question.isRegular) return null;
+  const stem = normalizeAnswer(question.verb.slice(0, -2));
+  if (stem.length < 3) return null;
+  return question.answers.find(answer => {
+    const ending = normalizeAnswer(answer).slice(stem.length);
+    return typed.endsWith(ending) && isOneSlipApart(typed.slice(0, typed.length - ending.length), stem);
+  }) ?? null;
+}
+
 // ---- The page ----
 
 const answerInput = byId("ans"), feedback = byId("fb"), mainButton = byId("go");
@@ -238,6 +269,7 @@ function swapInRegularVerbs(regularQuestions) {
   regularQuestions.forEach((question, k) => {
     const verb = unusedVerbs[conjugationOfQuestion[k]].pop();
     question.verb = verb;
+    question.isRegular = true;
     question.answers = answersFor(conjugateRegular(verb)[question.tense], question.person);
   });
 }
@@ -275,7 +307,9 @@ function checkAnswer() {
   const typed = normalizeAnswer(answerInput.value);
   if (!typed) return;
   const asTyped = answerInput.value.trim();
-  const isRight = question.answers.some(answer => normalizeAnswer(answer) === typed);
+  const isExact = question.answers.some(answer => normalizeAnswer(answer) === typed);
+  const meant = isExact ? null : answerWithStemSlip(typed, question);
+  const isRight = isExact || meant !== null;
   const matches = isRight ? null : identifyForm(typed, question);
   if (isRight) score++;
   else mistakes.push({ question, typed: asTyped, matches });
@@ -289,7 +323,9 @@ function checkAnswer() {
   if (isRight) {
     feedback.append(setText(makeElement("span"), "Correto", "Correct"));
     const alsoAccepted = question.answers.filter(answer => normalizeAnswer(answer) !== typed);
-    if (alsoAccepted.length) {
+    if (meant) {
+      feedback.append(setText(makeElement("span", "k"), `Gralha no radical: escreve-se «${meant}»`, `A typo in the stem: it's spelled «${meant}»`));
+    } else if (alsoAccepted.length) {
       const note = setText(makeElement("span", "k"), "também ", "also accepted: " + alsoAccepted.join(", "));
       appendOr(note, alsoAccepted);
       feedback.append(note);
