@@ -1,24 +1,24 @@
 # Piotrek's Polyverb Tincture
 
-Treinos de conjugação verbal, cada um numa só página.
+Aditz-jokoko ariketak, bakoitza orri bakarrean.
 
-- **Português** (`portuguese/index.html`): nove tempos do indicativo, condicional e conjuntivo, incluindo o futuro do conjuntivo. Verbos regulares e irregulares, em português europeu (com formas de *vós* opcionais) ou do Brasil (sem *tu* nem *vós*), e tabelas de verbos com comparação opcional com o espanhol. As duas escolhas ficam guardadas no browser.
-- **Polaco** (`polish/index.html`): verbos regulares em -ać, -ować e -ić/-yć no presente, no passado, no futuro e no condicional, com as formas de cada género.
-- **Sueco** (`swedish/index.html`): os tempos principais (presens, preteritum e supinum) de 483 verbos, das quatro conjugações: os mais comuns no treino por omissão, todos nas tabelas, por ordem alfabética.
+- **Portugesa** (`portuguese/index.html`): indikatiboko, baldintzazko eta subjuntiboko bederatzi aldi, subjuntiboko geroaldia barne. Aditz erregularrak eta irregularrak, Europako portugesez (*vós* formak aukeran) edo Brasilgo portugesez (*tu* eta *vós* gabe), eta aditz-taulak, nahi izanez gero gaztelaniarekin alderatuta. Bi aukerak nabigatzailean gordetzen dira.
+- **Poloniera** (`polish/index.html`): -ać, -ować eta -ić/-yć amaierako aditz erregularrak orainaldian, iraganean, geroaldian eta baldintzan, genero bakoitzaren formekin.
+- **Suediera** (`swedish/index.html`): 483 aditzen aldi nagusiak (presens, preteritum eta supinum), lau aditz-taldeetakoak: ohikoenak ariketan, lehenetsita, eta denak tauletan, ordena alfabetikoan.
 
-## Como usar
+## Erabilera
 
-Não é preciso instalar nada: abre o `index.html` num browser e escolhe uma língua.
+Ez da ezer instalatu behar: ireki `index.html` nabigatzaile batean eta aukeratu hizkuntza bat.
 
-## Ficheiros
+## Fitxategiak
 
-- `css/site.css`: as cores (claro e escuro), a tipografia, a barra de navegação e o rodapé, comuns às três páginas.
-- `css/trainer.css`: o que os treinos partilham (escolhas, cartão da pergunta, revisão, tabelas).
-- `js/trainer.js`: as funções que os três treinos partilham (secções, botões de escolha, teclas de letras, linha do tempo).
-- `<língua>/app.js`: o jogo e as tabelas de cada língua.
-- `portuguese/verbs.js`: os dados dos verbos portugueses e espanhóis.
-- `polish/verbs.js`: os verbos polacos, por classe, e a sua tradução inglesa.
-- `swedish/verbs.js`: os verbos suecos e os seus tempos principais, os comuns (`COMMON_VERBS`) e os restantes (`RARER_VERBS`).
-- `js/gloss.js`: mostra a tradução inglesa de um texto quando se passa o rato por cima (só com rato; nunca em ecrãs táteis).
+- `css/site.css`: koloreak (argia eta iluna), tipografia, nabigazio-barra eta orri-oina, hiru orrietan berdinak.
+- `css/trainer.css`: ariketek partekatzen dutena (aukerak, galderaren txartela, berrikuspena, taulak).
+- `js/trainer.js`: hiru ariketek partekatzen dituzten funtzioak (atalak, aukera-botoiak, letra-teklak, denbora-lerroa).
+- `<hizkuntza>/app.js`: hizkuntza bakoitzaren jokoa eta taulak.
+- `portuguese/verbs.js`: portugesezko eta gaztelaniazko aditzen datuak.
+- `polish/verbs.js`: polonierazko aditzak, klaseka, eta haien ingelesezko itzulpena.
+- `swedish/verbs.js`: suedierazko aditzak eta haien aldi nagusiak, ohikoak (`COMMON_VERBS`) eta gainerakoak (`RARER_VERBS`).
+- `js/gloss.js`: testu baten ingelesezko itzulpena erakusten du sagua gainetik pasatzean (saguarekin bakarrik; ukipen-pantailetan inoiz ez).
 
-Cada página acrescenta as suas próprias cores num bloco `<style>` e carrega, por esta ordem, `gloss.js`, `verbs.js`, `trainer.js` e `app.js`. Não há passo de compilação: os ficheiros são carregados com `<link>` e `<script src>` simples, por isso tudo funciona tanto aberto diretamente do disco como servido pelo GitHub Pages.
+Orri bakoitzak bere koloreak gehitzen ditu `<style>` bloke batean, eta ordena honetan kargatzen ditu `gloss.js`, `verbs.js`, `trainer.js` eta `app.js`. Ez dago konpilazio-urratsik: fitxategiak `<link>` eta `<script src>` etiketa soilekin kargatzen dira, eta, beraz, dena dabil bai diskotik zuzenean irekita, bai GitHub Pages-en bidez zerbitzatuta.
