@@ -4,6 +4,7 @@ Grammar drills games.
 
 - **[Polyverb](polyverb/)**: verb conjugation in Portuguese, Polish and Swedish.
 - **[Polynoun](polynoun/)**: noun plurals, cases and gender in Portuguese, Polish and Swedish.
+- **[Polyphrase](polyphrase/)**: translating sentences from English into European or Brazilian Portuguese.
 
 Nothing to install: open `index.html` in a browser.
 
