@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Polyphrase tests</title>
+<link rel="stylesheet" href="../css/site.css">
+<style>
+main{max-width:720px;margin:0 auto;padding:32px 20px 64px}
+h1{margin:0 0 6px;font-weight:600;font-size:1.8rem}
+#sum{margin:0 0 24px;color:var(--muted);font-style:italic}
+.suite{margin:0 0 10px;padding:10px 14px;border:1px solid var(--line);border-radius:8px;background:var(--card)}
+.suite.bad{border-color:var(--bad)}
+.suite p{margin:0;display:flex;justify-content:space-between;gap:12px}
+.suite .n{color:var(--muted);font-style:italic}
+.suite ul{margin:8px 0 0;padding:0 0 0 18px;color:var(--bad);font-size:.92rem}
+iframe{position:absolute;left:-9999px;width:400px;height:800px;border:0}
+</style>
+</head>
+<body>
+<main>
+  <h1>Polyphrase tests</h1>
+  <p id="sum">Running…</p>
+  <div id="out"></div>
+</main>
+<!-- The data and marking checks load the sentences and check.js directly; the game check plays a round in the page. -->
+<script src="../js/trainer.js"></script>
+<script src="../portuguese/sentences.js"></script>
+<script src="../portuguese/check.js"></script>
+<script>
+const suites = new Map();
+function check(suite, ok, message) {
+  if (!suites.has(suite)) suites.set(suite, { pass: 0, fail: [] });
+  const entry = suites.get(suite);
+  if (ok) entry.pass++; else entry.fail.push(message);
+}
+const VARIETIES = ["pe", "br"];
+const find = english => SENTENCES.find(sentence => sentence.english === english);
+
+// ---- Patterns ----
+
+const expanded = pattern => expandPattern(pattern).map(cleanText);
+check("Patterns", expanded("a (b|c) d").join("/") === "a b d/a c d", "(b|c) is a choice");
+check("Patterns", expanded("a [b] c").join("/") === "a c/a b c", "[b] can be left out, and is shown without");
+check("Patterns", expanded("a [b|c] d").join("/") === "a d/a b d/a c d", "[b|c] is b, c or nothing");
+check("Patterns", expanded("((a|b) c|d)").join("/") === "a c/b c/d", "choices nest");
+check("Patterns", expanded("x[-y]").join("/") === "x/x-y", "brackets inside a word");
+for (const broken of ["a (b", "a b)", "a [b", "(a]"]) {
+  let threw = false;
+  try { expandPattern(broken); } catch { threw = true; }
+  check("Patterns", threw, `"${broken}" should be refused`);
+}
+check("Patterns", cleanText("às oito .") === "às oito.", "cleanText closes the gap an empty bracket leaves");
+check("Patterns", toWords("*Vendeu a casa.").map(w => w.key + (w.verb ? "*" : "")).join(" ") === "vendeu* a casa", "toWords keeps the verb mark and drops punctuation");
+
+// ---- The sentences ----
+
+check("Sentences: how many", SENTENCES.length === 200, `${SENTENCES.length} sentences`);
+const tenses = { pres: 0, pret: 0 };
+for (const s of SENTENCES) tenses[s.tense] = (tenses[s.tense] || 0) + 1;
+check("Sentences: tenses", Object.keys(tenses).length === 2 && tenses.pres >= 80 && tenses.pret >= 80, JSON.stringify(tenses));
+check("Sentences: no duplicates", new Set(SENTENCES.map(s => s.english)).size === SENTENCES.length,
+  "twice: " + SENTENCES.map(s => s.english).filter((e, k, all) => all.indexOf(e) !== k).join(", "));
+
+const PRONOUNS = new Set(["eu", "tu", "você", "ele", "ela", "nós", "eles", "elas", "vocês"]);
+const usedNotes = new Set();
+for (const [k, entry] of SENTENCE_LIST.entries()) {
+  const [english, tense, pe, br, notes, extra] = entry;
+  const name = `#${k + 1} ${english}`;
+  check("Sentences: fields", entry.length >= 5 && entry.length <= 6 && english && pe && br && typeof notes === "string", `${name} is missing a field`);
+  check("Sentences: tense", tense === "pres" || tense === "pret", `${name}: tense "${tense}"`);
+  check("Sentences: English", /^[A-Z].*[.]$/.test(english) && !/'/.test(english), `${name}: start with a capital, end with a full stop, use ’`);
+  const sentence = SENTENCES[k];
+  for (const variety of VARIETIES) {
+    check("Sentences: a subject", pronounsFor(english, variety).length > 0, `${name}: no subject pronoun for ${variety}`);
+    let answers = [];
+    try { answers = expandPattern(sentence.patterns[variety]); } catch (error) { check("Sentences: patterns parse", false, `${name} (${variety}): ${error.message}`); continue; }
+    check("Sentences: patterns parse", true, "");
+    check("Sentences: not too many answers", answers.length <= 400, `${name} (${variety}): ${answers.length} answers`);
+    for (const text of answers) {
+      const words = toWords(text);
+      check("Sentences: each answer has a verb", words.some(w => w.verb), `${name} (${variety}): no *verb in "${text}"`);
+      check("Sentences: no subject pronoun in patterns", !PRONOUNS.has(words[0].key), `${name} (${variety}): "${text}" starts with a pronoun`);
+      const clean = cleanText(text);
+      check("Sentences: one full stop, at the end", /[^.]\.$/.test(clean) && clean.indexOf(".") === clean.length - 1, `${name} (${variety}): "${clean}"`);
+      if (variety === "br") check("Sentences: no -ámos in Brazil", !words.some(w => w.key.endsWith("ámos")), `${name}: "${text}"`);
+    }
+    // The answer shown, with the pronoun where it's shown, must be marked right
+    const usual = mainAnswer(sentence, variety);
+    check("Marking: the usual answer is right", markAnswer(sentence, variety, usual).right, `${name} (${variety}): "${usual}"`);
+    const bare = answersFor(sentence, variety)[0].map(word => word.shown).join(" ");
+    check("Marking: with or without the pronoun", markAnswer(sentence, variety, bare).right, `${name} (${variety}): "${bare}"`);
+    check("Marking: with or without the pronoun", markAnswer(sentence, variety, pronounsFor(english, variety)[0] + " " + bare).right, `${name} (${variety}): with the pronoun`);
+  }
+  for (const key of notes ? notes.split(" ") : []) {
+    usedNotes.add(key);
+    check("Sentences: notes exist", key in NOTES, `${name}: no note "${key}"`);
+  }
+  if (extra) check("Sentences: extra notes", Array.isArray(extra) ? extra.length === 2 : (extra.pe || extra.br), `${name}: odd extra note`);
+  const shown = VARIETIES.map(variety => sentenceNotes(sentence, variety).length);
+  check("Sentences: every sentence has a note", shown.every(n => n > 0), `${name}: no note for ${VARIETIES.filter((_, i) => !shown[i]).join(", ")}`);
+}
+check("Notes: none unused", Object.keys(NOTES).every(key => usedNotes.has(key)), "unused: " + Object.keys(NOTES).filter(key => !usedNotes.has(key)).join(", "));
+for (const [key, note] of Object.entries(NOTES)) {
+  const pairs = Array.isArray(note) ? [note] : Object.values(note);
+  check("Notes: pairs", pairs.length && pairs.every(pair => Array.isArray(pair) && pair.length === 2 && pair.every(Boolean)), `${key} isn't a [Portuguese, English] pair`);
+}
+
+// ---- Marking: answers from the chat that started this ----
+
+function marks(english, variety, typed, right, ...noteHas) {
+  const sentence = find(english);
+  if (!sentence) return check("Marking", false, `no sentence "${english}"`);
+  const result = markAnswer(sentence, variety, typed);
+  check("Marking", result.right === right, `${variety} "${typed}" should be ${right ? "right" : "wrong"}`);
+  const notes = result.notes.map(([pt, en]) => pt + " | " + en).join(" // ");
+  for (const text of noteHas) check("Marking: notes", notes.includes(text), `${variety} "${typed}": no note with "${text}" in: ${notes || "(none)"}`);
+  return result;
+}
+
+marks("I work in a bank.", "pe", "Trabalho num banco.", true);
+marks("I work in a bank.", "pe", "Eu trabalho num banco", true);
+marks("I work in a bank.", "pe", "trabalho em um banco", true);
+marks("We live in Lisbon with my parents.", "pe", "Vivemos em Lisboa com os meus pais.", true);
+marks("She arrives at the station at eight o’clock.", "pe", "Chega à estação às oito.", true);
+marks("She arrives at the station at eight o’clock.", "pe", "Chega a estação as oito.", false, "a preposição a mais o artigo a", "artigo as");
+marks("We waited for the bus for twenty minutes.", "pe", "Esperámos o autocarro durante vinte minutos.", true);
+marks("You (informal) studied at home before the test.", "pe", "Tu estudaste em casa antes do teste.", true);
+marks("You (informal) studied at home before the test.", "br", "Você estudou em casa antes da prova.", true);
+marks("You (informal) studied at home before the test.", "br", "Estudaste em casa antes do teste.", false, "pessoa e o tempo");
+marks("He bought a present for his sister.", "pe", "Comprou un presente para a sua irmā.", false, "«un» é espanhol", "mácron");
+marks("I was at work until six o’clock.", "pe", "Estive no trabalho até às seis.", true);
+marks("I was at work until six o’clock.", "pe", "Estive no trabalho até as seis.", true);
+marks("I called my mother after dinner.", "pe", "Telefonei a minha māe depois do jantar.", false, "acento grave", "mácron");
+marks("I called my mother after dinner.", "pe", "chantei a mãe meu despues do jantar", false, "«despues» é espanhol");
+marks("I called my mother after dinner.", "br", "Liguei para minha mãe depois do jantar.", true);
+marks("He sold his old bicycle to a friend.", "pe", "Vendi a sua velha bicicleta a uma amiga.", false, "«vendi» → «vendeu»");
+marks("We had dinner with our neighbours at nine o’clock.", "pe", "Jantámos com os nossos vizinhos às nove.", true);
+marks("We had dinner with our neighbours at nine o’clock.", "pe", "jantámos con os nos veizinhos ás novo", false, "«con» é espanhol", "«ás» → «às»");
+const amos = marks("We had dinner with our neighbours at nine o’clock.", "pe", "Jantamos com os nossos vizinhos às nove.", true);
+check("Marking: notes", amos.notes.length === 1 && amos.notes[0][0].includes("«jantámos»"), "-amos in Portugal: say it's usually -ámos");
+marks("We had dinner with our neighbours at nine o’clock.", "br", "Jantámos com nossos vizinhos às nove.", false, "não se escreve -ámos");
+marks("You (informal) decided to travel by train to Coimbra.", "pe", "Decedi viajar de comboio para Coimbra.", false, "pessoa e o tempo");
+marks("You (informal) decided to travel by train to Coimbra.", "pe", "decidi viajar em trem pra Coimbra", false);
+marks("They left the keys on the table.", "pe", "Deixarem as chaves na mesa.", false, "infinitivo pessoal");
+marks("They left the keys on the table.", "pe", "Deixaram as chaves na mesa.", true);
+marks("They left the keys on the table.", "pe", "Elas deixaram as chaves na mesa.", true);
+marks("I wait for my friend at the café.", "pe", "Espero o minha amiga no café.", false);
+marks("I wait for my friend at the café.", "pe", "Espero pelo meu amigo no café.", true);
+marks("He sells fruit at the market.", "pe", "Vende fruta no mercado.", true);
+marks("We open the shop at nine o’clock.", "pe", "Abre a tenda ás nove.", false);
+marks("You (informal) park the car behind the school.", "pe", "Estacionas o carro atras da escola.", false, "só o acento");
+marks("They write to their grandmother every week.", "pe", "Escrevem a sua vovó todas as semanas.", false);
+marks("I answered the email before lunch.", "pe", "Respondi ao mail antes do almoço.", false);
+marks("I answered the email before lunch.", "pe", "Respondi o e-mail antes do almoço.", false);
+marks("I answered the email before lunch.", "br", "Respondi o e-mail antes do almoço.", true);
+marks("She lost her phone on the train.", "pe", "Perdiu o seu telefono no comboio.", false, "pessoa e o tempo");
+marks("We discovered a small restaurant near the river.", "pe", "Descobrimos un restaurante pequeno perto do rio.", false, "«un» é espanhol");
+marks("You (informal) had breakfast with your colleagues.", "pe", "Tomaste el pequeno-almoço con os teus colegas.", false, "«el» é espanhol", "«con» é espanhol");
+marks("You (informal) had breakfast with your colleagues.", "pe", "Comeste pequeno-almorço com os teus companheros", false);
+marks("They lived in Porto for three years.", "pe", "Vivimos no Porto durante tres anos.", false, "«vivimos» é espanhol", "só o acento");
+marks("They lived in Porto for three years.", "pe", "Viverem em Porto durante tres anhos", false, "infinitivo pessoal");
+marks("They lived in Porto for three years.", "br", "Eles moraram no Porto por três anos.", true);
+marks("I study Portuguese at the library.", "pe", "Estudio o português na biblioteca", false);
+marks("He drinks coffee in the kitchen.", "pe", "Bebe café na cozinha", true);
+marks("I always forget my umbrella.", "pe", "Esqueço-me sempre do guarda-chuva.", true);
+marks("I always forget my umbrella.", "br", "Eu sempre esqueço o guarda-chuva.", true);
+
+// The marks under the answer: what differs is marked, what's right isn't
+const marked = markAnswer(find("They left the keys on the table."), "pe", "Deixarem as chaves na mesa.").marked;
+check("Marking: marks", marked.map(w => w.changed ? `[${w.shown}]` : w.shown).join(" ") === "[Deixaram] as chaves na mesa.", marked.map(w => w.shown + (w.changed ? "*" : "")).join(" "));
+const brMarked = markAnswer(find("She lost her phone on the train."), "br", "Perdeu o celular no trem.").marked;
+check("Marking: marks", brMarked.map(w => w.shown).join(" ") === "Ela perdeu o celular no trem.", "Brazil shows ela: " + brMarked.map(w => w.shown).join(" "));
+const missing = markAnswer(find("I work in a bank."), "pe", "Trabalho banco").marked;
+check("Marking: marks", missing.filter(w => w.changed).map(w => w.shown).join() === "num", "a missing word is marked: " + missing.map(w => w.shown + (w.changed ? "*" : "")).join(" "));
+
+// ---- Playing the game ----
+
+function loadPage(src) {
+  return new Promise(resolve => {
+    const frame = document.createElement("iframe");
+    frame.src = src;
+    frame.onload = () => resolve(frame.contentWindow);
+    document.body.appendChild(frame);
+  });
+}
+
+async function playGame() {
+  const errors = [];
+  const win = await loadPage("../portuguese/index.html");
+  win.addEventListener("error", e => errors.push(e.message));
+  const doc = win.document;
+  for (const [variety, tense, count] of [["pe", "both", "40"], ["br", "pres", "20"], ["pe", "pret", "10"]]) {
+    doc.querySelector(`#variant [data-v="${variety}"]`).click();
+    doc.querySelector(`#tense [data-v="${tense}"]`).click();
+    doc.querySelector(`#count [data-v="${count}"]`).click();
+    doc.getElementById("start").click();
+    const total = win.eval("questions.length");
+    let expected = 0;
+    const name = `${variety}, ${tense}`;
+    for (let k = 0; k < total; k++) {
+      const sentence = win.eval("questions[questionIndex]");
+      check("Game", tense === "both" || sentence.tense === tense, `${name}: a ${sentence.tense} sentence`);
+      const right = k % 3 !== 0;
+      doc.getElementById("ans").value = right ? win.eval("mainAnswer")(sentence, variety) : "xyz abc";
+      if (right) expected++;
+      doc.getElementById("go").click();
+      const fb = doc.getElementById("fb");
+      check("Game", !fb.hidden && fb.classList.contains(right ? "ok" : "bad"), `${name}: question ${k + 1} marked wrongly`);
+      check("Game", fb.querySelector(".rule"), `${name}: question ${k + 1} has no note`);
+      doc.getElementById("go").click();
+    }
+    check("Game", total === Number(count), `${name}: ${total} questions, expected ${count}`);
+    check("Game", !doc.getElementById("done").hidden, `${name}: the results never showed`);
+    check("Game", doc.getElementById("res").textContent === `${expected} / ${total}`, `${name}: score "${doc.getElementById("res").textContent}", expected ${expected} / ${total}`);
+    check("Game", doc.querySelectorAll("#miss tbody tr").length === total - expected, `${name}: rows to review`);
+    doc.getElementById("change").click();
+  }
+  check("Game: the variety is remembered", win.localStorage.getItem("polyphrase-pt-variant") === "pe", "not saved");
+
+  win.location.hash = "#tables";
+  for (const tense of ["pres", "pret"]) {
+    doc.querySelector(`#ttense [data-v="${tense}"]`).click();
+    const rows = doc.querySelectorAll("#tbl tbody tr").length;
+    check("Sentence list", rows === SENTENCES.filter(s => s.tense === tense).length && rows > 0, `${tense}: ${rows} rows`);
+  }
+  doc.querySelector(`#tbl-variant [data-v="br"]`).click();
+  check("Sentence list", doc.querySelector("#tbl thead th:last-child").textContent === "Português do Brasil", "the variety heading doesn't follow the choice");
+  check("No script errors", errors.length === 0, errors.join("; "));
+}
+
+function report() {
+  const out = document.getElementById("out");
+  let passes = 0, fails = 0;
+  for (const [name, { pass, fail }] of suites) {
+    passes += pass;
+    fails += fail.length;
+    const box = document.createElement("div");
+    box.className = "suite" + (fail.length ? " bad" : "");
+    box.innerHTML = `<p><span>${fail.length ? "✗" : "✓"} ${name}</span><span class="n">${pass} passed${fail.length ? `, ${fail.length} failed` : ""}</span></p>`;
+    if (fail.length) {
+      const list = document.createElement("ul");
+      for (const message of fail) list.appendChild(Object.assign(document.createElement("li"), { textContent: message }));
+      box.appendChild(list);
+    }
+    out.appendChild(box);
+  }
+  document.getElementById("sum").textContent = fails ? `${fails} failing, ${passes} passing` : `All ${passes} passing`;
+  document.title = fails ? "FAIL" : "PASS";
+  document.body.dataset.done = "1";
+}
+
+playGame().catch(error => check("No script errors", false, String(error))).finally(report);
+</script>
+</body>
+</html>
