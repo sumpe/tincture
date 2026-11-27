@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Polskie rzeczowniki 🥟</title>
+<meta name="theme-color" content="#f7f3ec" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#19110c" media="(prefers-color-scheme: dark)">
+<link rel="stylesheet" href="../css/site.css">
+<link rel="stylesheet" href="../css/trainer.css">
+<style>
+:root{
+  --accent:#9b2c3a;
+  --fill:#9b2c3a;
+  --fill-hi:#86232f;
+  --tint:#f1dcd9;
+  --ring:rgba(155,44,58,.2);
+  --tag:#9b2c3a;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --accent:#eb98a1;
+    --fill:#a3404c;
+    --fill-hi:#b04b57;
+    --tint:#3e2025;
+    --ring:rgba(235,152,161,.25);
+    --tag:#eb98a1;
+  }
+}
+:root[data-theme="dark"]{
+  --accent:#eb98a1;
+  --fill:#a3404c;
+  --fill-hi:#b04b57;
+  --tint:#3e2025;
+  --ring:rgba(235,152,161,.25);
+  --tag:#eb98a1;
+}
+
+/* Polish specifics: six cases in a grid, three across, two on phones */
+#cases{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (max-width:480px){#cases{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:400px){#cases button{padding:8px 4px;font-size:.94rem}}
+.case{margin-top:6px}
+.keys{--keys:9}
+</style>
+</head>
+<body>
+<nav class="nav" aria-label="Casebook"><div class="in">
+  <a class="brand" href="../index.html">Casebook</a>
+  <div class="langs">
+    <a href="../portuguese/index.html" lang="pt-PT" data-en="Portuguese"><span class="fl pt" aria-hidden="true"></span>Português</a>
+    <a href="../polish/index.html" lang="pl" aria-current="page" data-en="Polish"><span class="fl pl" aria-hidden="true"></span>Polski</a>
+    <a href="../swedish/index.html" lang="sv" data-en="Swedish"><span class="fl sv" aria-hidden="true"></span>Svenska</a>
+  </div>
+</div></nav>
+<header class="mast"><div class="in">
+  <h1 data-en="Polish Nouns">Polskie rzeczowniki&nbsp;🥟</h1>
+  <p class="sub" id="sub" data-en="Cases and gender. Type the form, or pick ten, ta or to; diacritics count.">Przypadki i rodzaj. Wpisz formę albo wybierz ten, ta czy to; znaki diakrytyczne się liczą.</p>
+  <nav class="tabs" aria-label="Sekcje">
+    <a href="#game" id="tab-game" aria-current="page" data-en="Practice">Trening</a>
+    <a href="#tables" id="tab-tables" data-en="Tables">Tabele</a>
+  </nav>
+</div></header>
+<main>
+  <section id="setup">
+    <span class="lbl" id="l-m" data-en="Mode">Tryb</span>
+    <div class="seg" id="mode" role="group" aria-labelledby="l-m">
+      <button data-v="cases" class="on" aria-pressed="true" data-en="Cases">Przypadki</button>
+      <button data-v="au" aria-pressed="false" data-en="Genitive: -a or -u?">-a czy -u?</button>
+      <button data-v="gender" aria-pressed="false" data-en="Gender">Rodzaj</button>
+    </div>
+
+    <div id="cases-settings">
+      <span class="lbl" id="l-c" data-en="Cases">Przypadki</span>
+      <div class="chips tight" id="cases" role="group" aria-labelledby="l-c"></div>
+      <p class="hint" data-en="For example: to są koty (these are cats), nie ma kota (there's no cat), dużo kotów (lots of cats), widzę kota (I see a cat), myślę o kocie (I'm thinking about the cat), przed kotem (in front of the cat).">Na przykład: to są koty, nie ma kota, dużo kotów, widzę kota, myślę o kocie, przed kotem.</p>
+      <span class="lbl" id="l-w" data-en="Nouns">Rzeczowniki</span>
+      <div class="seg" id="which" role="group" aria-labelledby="l-w">
+        <button data-v="all" class="on" aria-pressed="true" data-en="Exceptions included">Z wyjątkami</button>
+        <button data-v="regular" aria-pressed="false" data-en="Leave out the exceptions">Bez wyjątków</button>
+      </div>
+    </div>
+
+    <div id="au-settings" hidden>
+      <p class="hint" data-en="The genitive of masculine nouns that aren't alive: nie ma stołu (there's no table), but nie ma klucza (there's no key). There's no sure rule. Usually -a: tools, body parts, fruit and vegetables, months. Usually -u: vehicles, abstract things and many loanwords.">Dopełniacz rzeczowników męskich nieżywotnych: nie ma stołu, ale nie ma klucza. Nie ma pewnej reguły. Zwykle -a: narzędzia, części ciała, owoce i warzywa, miesiące. Zwykle -u: pojazdy, rzeczy abstrakcyjne i wiele zapożyczeń. <span class="n" id="au-count"></span></p>
+    </div>
+
+    <div id="gender-settings" hidden>
+      <span class="lbl" id="l-l" data-en="Level">Poziom</span>
+      <div class="seg tight" id="gender-level" role="group" aria-labelledby="l-l">
+        <button data-v="easy" class="on" aria-pressed="true" data-en="Easy">Łatwy</button>
+        <button data-v="medium" aria-pressed="false" data-en="Medium">Średni</button>
+        <button data-v="hard" aria-pressed="false" data-en="Hard">Trudny</button>
+      </div>
+      <p class="hint" id="gender-about" aria-live="polite"></p>
+    </div>
+
+    <span class="lbl" id="l-n" data-en="Number of questions">Liczba pytań</span>
+    <div class="seg" id="count" role="group" aria-labelledby="l-n">
+      <button data-v="10" aria-pressed="false">10</button>
+      <button data-v="20" class="on" aria-pressed="true">20</button>
+      <button data-v="30" aria-pressed="false">30</button>
+    </div>
+    <button class="primary" id="start" data-en="Start">Zacznij</button>
+  </section>
+
+  <section id="quiz" hidden>
+    <div class="top"><span id="prog"></span><span id="score"></span></div>
+    <div class="bar"><div id="fill"></div></div>
+    <p class="ask" id="ask" hidden data-en="Ten, ta or to?">Ten, ta czy to?</p>
+    <div class="word" id="word"></div>
+    <div class="case" id="case"></div>
+    <div class="frame" id="frame"></div>
+    <input id="ans" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Twoja odpowiedź">
+    <div class="keys" id="keys" role="group" aria-label="Litery ze znakami diakrytycznymi"></div>
+    <div id="pick" role="group" aria-label="Rodzaj" hidden>
+      <button data-v="m">ten<span class="k"><span data-en="masculine">męski</span><span class="key" data-en="or press M"> · M</span></span></button>
+      <button data-v="f">ta<span class="k"><span data-en="feminine">żeński</span><span class="key" data-en="or press Ż or Z"> · Ż</span></span></button>
+      <button data-v="n">to<span class="k"><span data-en="neuter">nijaki</span><span class="key" data-en="or press N"> · N</span></span></button>
+    </div>
+    <div id="fb" class="fb" role="status" hidden></div>
+    <button class="primary" id="go">Sprawdź</button>
+  </section>
+
+  <section id="done" hidden>
+    <div id="res"></div>
+    <div id="pct"></div>
+    <p id="misshead" data-en="To review">Do powtórki</p>
+    <table id="miss">
+      <thead><tr><th scope="col" data-en="Question">Pytanie</th><th scope="col" data-en="You wrote, then the answer">Wpisano i poprawnie</th></tr></thead>
+    </table>
+    <button class="primary" id="again" data-en="Play again">Zagraj ponownie</button>
+    <button class="ghost" id="change" data-en="Change settings">Zmień ustawienia</button>
+  </section>
+
+  <section id="tbl-view" data-wide hidden>
+    <p class="sub" data-en="Choose a gender. The part of each form that differs from the nominative is underlined; hover over a nominative for the English.">Wybierz rodzaj. Część formy, która różni się od mianownika, jest podkreślona.</p>
+    <div class="seg tight" id="tgender" role="group" aria-label="Rodzaj">
+      <button data-v="f" class="on" aria-pressed="true" data-en="Feminine">Żeńskie</button>
+      <button data-v="m" aria-pressed="false" data-en="Masculine">Męskie</button>
+      <button data-v="n" aria-pressed="false" data-en="Neuter">Nijakie</button>
+    </div>
+    <p class="count" id="tcount"></p>
+    <div class="tw"><table id="tbl"></table></div>
+    <a class="link back" href="#game" data-en="Back to the game">Wróć do gry</a>
+  </section>
+</main>
+<footer class="foot">By Peter S</footer>
+
+<script src="../js/gloss.js"></script>
+<script src="nouns.js"></script>
+<script src="../js/trainer.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

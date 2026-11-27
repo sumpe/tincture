@@ -1,0 +1,99 @@
+/* Metaphrase: what every page shares. Colours for light and dark, the type, the nav and the footer.
+   Each page adds its own accent colours in a <style> block after this file. */
+:root{
+  --serif:"Iowan Old Style","Palatino Linotype","URW Palladio L",P052,Palatino,"Book Antiqua",Georgia,serif;
+  --paper:#f7f3ec;
+  --card:#fdfbf7;
+  --sunk:#ece5d9;
+  --ink:#2a1c13;
+  --muted:#67503f;
+  --line:#e2d8c8;
+  --edge:#8f7a63;
+  --hover:rgba(42,28,19,.06);
+  --focus:#2a1c13;
+  --ok:#2c6640;
+  --okbg:#e0eadb;
+  --bad:#9a3426;
+  --badbg:#f4ddd5;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#19110c;
+    --card:#221812;
+    --sunk:#2c2019;
+    --ink:#f0e4d2;
+    --muted:#ab9886;
+    --line:#3a2b21;
+    --edge:#76624f;
+    --hover:rgba(240,228,210,.06);
+    --focus:#f0e4d2;
+    --ok:#95d3a5;
+    --okbg:#1d3123;
+    --bad:#f29d90;
+    --badbg:#40231c;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#19110c;
+  --card:#221812;
+  --sunk:#2c2019;
+  --ink:#f0e4d2;
+  --muted:#ab9886;
+  --line:#3a2b21;
+  --edge:#76624f;
+  --hover:rgba(240,228,210,.06);
+  --focus:#f0e4d2;
+  --ok:#95d3a5;
+  --okbg:#1d3123;
+  --bad:#f29d90;
+  --badbg:#40231c;
+  color-scheme:dark;
+}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;min-height:100%;background:var(--paper);color:var(--ink);font:17px/1.55 var(--serif);font-kerning:normal;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer;-webkit-tap-highlight-color:transparent}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+
+/* Site navigation */
+.nav{border-bottom:1px solid var(--line)}
+.nav .in{display:flex;align-items:center;justify-content:space-between;gap:12px;max-width:540px;margin:0 auto;padding:2px 20px}
+.brand{display:inline-flex;align-items:center;min-height:44px;color:var(--ink);font-weight:600;font-size:1.06rem;letter-spacing:.01em;text-decoration:none;border-radius:4px}
+.langs{display:flex;gap:4px;margin-right:-8px}
+.langs a{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 8px;border-radius:4px;color:var(--muted);font-size:.94rem;text-decoration:none}
+.langs a[aria-current]{color:var(--ink);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:6px}
+.fl{flex:none;width:16px;height:11px;border-radius:2px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.14)}
+.fl.pt{background:linear-gradient(90deg,#2d6a4f 0 40%,#c0392b 40%)}
+.fl.pl{background:linear-gradient(#fff 0 50%,#b8323f 50%)}
+.fl.sv{background:linear-gradient(90deg,transparent 31%,#f2c230 31% 44%,transparent 44%),linear-gradient(transparent 40%,#f2c230 40% 60%,transparent 60%),#2a6496}
+
+/* Footer: a hairline the width of the text column, then the credit */
+.foot{width:calc(100% - 40px);max-width:500px;margin:0 auto;padding:18px 0 32px;border-top:1px solid var(--line);color:var(--muted);font-style:italic;font-size:.85rem;text-align:right}
+
+/* English on hover (gloss.js): a small ink slip, shown only to a mouse */
+.gloss{position:fixed;left:0;top:0;z-index:20;max-width:min(320px,calc(100vw - 16px));padding:5px 10px 6px;border-radius:5px;background:var(--ink);color:var(--paper);font:italic .88rem/1.4 var(--serif);text-align:left;pointer-events:none;opacity:0;transition:opacity .12s}
+.gloss.on{opacity:1}
+@media (hover:hover) and (pointer:fine){
+  [data-en]:not(a,button,label,label *){cursor:help}
+}
+
+/* Phones: three language names don't fit beside the brand with flags, so the flags go */
+@media (max-width:480px){
+  .fl{display:none}
+  .langs{gap:0}
+  .langs a{padding:0 6px;font-size:.9rem}
+}
+@media (max-width:400px){
+  .nav .in{padding-left:16px;padding-right:16px}
+  .foot{width:calc(100% - 32px)}
+}
+@media (hover:hover){
+  .brand:hover,.langs a:hover{color:var(--ink)}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{transition:none!important}
+}
