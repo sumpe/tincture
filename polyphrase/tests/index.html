@@ -166,6 +166,16 @@ marks("He drinks coffee in the kitchen.", "pe", "Bebe café na cozinha", true);
 marks("I always forget my umbrella.", "pe", "Esqueço-me sempre do guarda-chuva.", true);
 marks("I always forget my umbrella.", "br", "Eu sempre esqueço o guarda-chuva.", true);
 
+// Answers the first answer key missed, found on checking it
+marks("I live in a small flat near the beach.", "pe", "Moro num apartamento pequeno perto da praia.", true);
+marks("I lived in London for two years.", "pe", "Morei em Londres dois anos.", true);
+marks("He bought a present for his sister.", "pe", "Comprou uma prenda para a irmã.", true);
+marks("He drinks coffee in the kitchen.", "pe", "Toma café na cozinha.", true);
+marks("They called the police.", "pe", "Ligaram para a polícia.", true);
+marks("I called my mother after dinner.", "pe", "Liguei para a minha mãe depois do jantar.", false);
+marks("We met our friends at the cinema.", "pe", "Encontramo-nos com os nossos amigos no cinema.", true);
+check("Marking: notes", find("I lived in London for two years.").notes.includes("pret_er"), "viver is an -er verb");
+
 // The marks under the answer: what differs is marked, what's right isn't
 const marked = markAnswer(find("They left the keys on the table."), "pe", "Deixarem as chaves na mesa.").marked;
 check("Marking: marks", marked.map(w => w.changed ? `[${w.shown}]` : w.shown).join(" ") === "[Deixaram] as chaves na mesa.", marked.map(w => w.shown + (w.changed ? "*" : "")).join(" "));
