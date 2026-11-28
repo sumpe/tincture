@@ -254,9 +254,9 @@ multiChoice(
   chosen => { chosenGroups = chosen; showAllCount(); }
 );
 
-// "Todos": one form of every irregular verb in the chosen groups, and with the regular group, every
-// regular form: each tense and person of -ar, -er and -ir, each on a regular verb of that conjugation.
-// The tenses and persons are those the settings leave in.
+// "Todos": every form in the chosen groups. Every tense and person of each irregular verb, and with
+// the regular group, every tense and person of -ar, -er and -ir, each on a regular verb of that
+// conjugation. The tenses and persons are those the settings leave in.
 function slotsInUse() {
   const persons = personsInUse().filter(person => person !== VOS || byId("vos").checked);
   const skipFutureAndConditional = byId("syn").checked;
@@ -271,8 +271,9 @@ function irregularVerbsChosen() {
   return Object.keys(VERB_TABLES).filter(verb => chosenGroups.includes(GROUP_OF_VERB[verb]) && !isRegularModel(verb));
 }
 function showAllCount() {
-  const regularForms = chosenGroups.includes("regular") ? 3 * slotsInUse().length : 0;
-  byId("all-n").textContent = irregularVerbsChosen().length + regularForms;
+  const slots = slotsInUse().length;
+  const regularForms = chosenGroups.includes("regular") ? 3 * slots : 0;
+  byId("all-n").textContent = irregularVerbsChosen().length * slots + regularForms;
 }
 showAllCount();
 byId("vos").addEventListener("change", showAllCount);
@@ -295,7 +296,7 @@ function startRound() {
       for (const person of persons) candidates.push({ verb, tense, person, answers: answersFor(tenseForms, person) });
     });
   }
-  if (questionCount === "all") questions = oneFormOfEveryVerb();
+  if (questionCount === "all") questions = everyForm();
   else {
     questions = shuffled(candidates).slice(0, questionCount);
     swapInRegularVerbs(questions.filter(question => isRegularModel(question.verb)));
@@ -308,10 +309,9 @@ function startRound() {
   showQuestion();
 }
 
-// The irregular verbs once each, in a tense and person dealt out evenly, like cards: each comes up
-// once before any comes up again. The regular forms all once, each on a verb dealt the same way from
-// its conjugation. Then all in random order.
-function oneFormOfEveryVerb() {
+// Every form once: the irregular verbs' own, and the regular ones each on a verb dealt from its
+// conjugation like a card, each verb once before any comes up again. Then all in random order.
+function everyForm() {
   const slots = slotsInUse();
   const dealer = cards => {
     let deck = [];
@@ -320,11 +320,10 @@ function oneFormOfEveryVerb() {
       return deck.pop();
     };
   };
-  const dealSlot = dealer(slots);
-  const questions = irregularVerbsChosen().map(verb => {
-    const { tense, person } = dealSlot();
-    return { verb, tense, person, answers: answersFor(VERB_TABLES[verb][tense], person) };
-  });
+  const questions = [];
+  for (const verb of irregularVerbsChosen()) {
+    for (const { tense, person } of slots) questions.push({ verb, tense, person, answers: answersFor(VERB_TABLES[verb][tense], person) });
+  }
   if (chosenGroups.includes("regular")) {
     for (const conjugation of ["ar", "er", "ir"]) {
       const dealVerb = dealer(REGULAR_VERBS[conjugation]);
@@ -337,14 +336,14 @@ function oneFormOfEveryVerb() {
   return withoutRepeats(shuffled(questions));
 }
 
-// A regular verb comes up several times in a round; this keeps the same verb from coming up twice in
+// A verb comes up many times in a round; this keeps the same verb from coming up twice in
 // a row, swapping a repeat with another question that fits in its place.
 function withoutRepeats(questions) {
   for (let k = 1; k < questions.length; k++) {
     if (questions[k].verb !== questions[k - 1].verb) continue;
     const swap = questions.findIndex((other, j) => Math.abs(j - k) > 1 && other.verb !== questions[k - 1].verb &&
-      other.verb !== questions[k + 1]?.verb && questions[j - 1].verb !== questions[k].verb && questions[j + 1]?.verb !== questions[k].verb);
-    if (swap > 0) [questions[k], questions[swap]] = [questions[swap], questions[k]];
+      other.verb !== questions[k + 1]?.verb && questions[j - 1]?.verb !== questions[k].verb && questions[j + 1]?.verb !== questions[k].verb);
+    if (swap >= 0) [questions[k], questions[swap]] = [questions[swap], questions[k]];
   }
   return questions;
 }
