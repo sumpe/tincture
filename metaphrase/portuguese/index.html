@@ -66,7 +66,9 @@ textarea{font:inherit;color:inherit}
 .gw:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
 .gtog{min-height:32px;padding:0 11px;border:1px solid var(--line);border-radius:999px;background:transparent;color:var(--muted);font-size:.85rem;font-style:normal;transition:background-color .15s,border-color .15s,color .15s}
 .gtog[aria-pressed="true"]{background:var(--tint);border-color:var(--accent);color:var(--accent);font-weight:600}
-.top{align-items:center}
+/* Progress, the toggle and the score: equal outer columns, so the toggle sits on the card's centre line like the sentence */
+.top{display:grid;grid-template-columns:1fr auto 1fr;align-items:center}
+#score{justify-self:end}
 @media (hover:hover){.gtog:hover{border-color:var(--edge)}}
 .keys{--keys:12}
 @media (max-width:480px){.keys{--keys:6}}
