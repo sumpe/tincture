@@ -223,7 +223,7 @@ addLetterKeys(["á", "à", "â", "ã", "é", "ê", "í", "ó", "ô", "õ", "ú",
 let questionCount = 20;
 let chosenGroups = ["regular", "essential"];
 
-singleChoice("seg", value => { questionCount = Number(value); });
+singleChoice("seg", value => { questionCount = value === "all" ? "all" : Number(value); });
 // The variant can be chosen on the setup screen or above the tables; both trays show the same choice.
 function chooseVariant(value) {
   variant = value;
@@ -250,8 +250,20 @@ multiChoice(
   byId("kinds"),
   Object.keys(GROUP_NAMES).map(group => ({ value: group, label: GROUP_NAMES[group], english: GROUP_NAMES_EN[group] })),
   () => chosenGroups,
-  chosen => { chosenGroups = chosen; }
+  chosen => { chosenGroups = chosen; showAllCount(); }
 );
+
+// "Todos": one form of every verb in the chosen groups; for the regular group, every verb in REGULAR_VERBS
+function verbsForAll() {
+  const irregular = Object.keys(VERB_TABLES).filter(verb => chosenGroups.includes(GROUP_OF_VERB[verb]) && !isRegularModel(verb));
+  const regular = chosenGroups.includes("regular") ? [...new Set(Object.values(REGULAR_VERBS).flat())] : [];
+  return { irregular, regular };
+}
+function showAllCount() {
+  const { irregular, regular } = verbsForAll();
+  byId("all-n").textContent = irregular.length + regular.length;
+}
+showAllCount();
 
 // ---- The round ----
 
@@ -270,14 +282,43 @@ function startRound() {
       for (const person of persons) candidates.push({ verb, tense, person, answers: answersFor(tenseForms, person) });
     });
   }
-  questions = shuffled(candidates).slice(0, questionCount);
-  swapInRegularVerbs(questions.filter(question => isRegularModel(question.verb)));
+  if (questionCount === "all") questions = oneFormOfEveryVerb(persons, skipFutureAndConditional);
+  else {
+    questions = shuffled(candidates).slice(0, questionCount);
+    swapInRegularVerbs(questions.filter(question => isRegularModel(question.verb)));
+  }
   questionIndex = 0;
   score = 0;
   slips = 0;
   mistakes = [];
   showSection("quiz");
   showQuestion();
+}
+
+// Every verb once, in random order. The tenses and persons are dealt out evenly, like cards: each
+// tense and person comes up once before any comes up again.
+function oneFormOfEveryVerb(persons, skipFutureAndConditional) {
+  const slots = [];
+  VERB_TABLES.ser.forEach((_, tense) => {
+    if (skipFutureAndConditional && (tense === FUTURE || tense === CONDITIONAL)) return;
+    for (const person of persons) slots.push({ tense, person });
+  });
+  const { irregular, regular } = verbsForAll();
+  let deck = [];
+  const deal = () => {
+    if (!deck.length) deck = shuffled(slots);
+    return deck.pop();
+  };
+  return shuffled([
+    ...irregular.map(verb => {
+      const { tense, person } = deal();
+      return { verb, tense, person, answers: answersFor(VERB_TABLES[verb][tense], person) };
+    }),
+    ...regular.map(verb => {
+      const { tense, person } = deal();
+      return { verb, tense, person, isRegular: true, answers: answersFor(conjugateRegular(verb)[tense], person) };
+    })
+  ]);
 }
 
 // Each question on a model verb gets a regular verb of its own instead, with the

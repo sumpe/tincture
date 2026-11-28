@@ -72,6 +72,7 @@ thead tr:first-child:not(:last-child) th{border-bottom:0;padding-bottom:2px}
 thead tr:nth-child(2) th{color:var(--muted);font-weight:400;font-style:italic;font-size:.9rem;text-align:center}
 th.pt,td.pt{background:var(--col-pt);border-left:1px solid var(--line)}
 th.es,td.es{background:var(--col-es)}
+.all-n{color:var(--muted);font-weight:400;font-size:.9em}
 .keys{--keys:12}
 @media (max-width:480px){.keys{--keys:6}}
 </style>
@@ -106,6 +107,7 @@ th.es,td.es{background:var(--col-es)}
       <button data-v="10" aria-pressed="false">10</button>
       <button data-v="20" class="on" aria-pressed="true">20</button>
       <button data-v="30" aria-pressed="false">30</button>
+      <button data-v="all" aria-pressed="false" data-en="All: one form of every verb in the chosen groups">Todos <span class="all-n" id="all-n"></span></button>
     </div>
     <span class="lbl" id="l-k" data-en="Verbs">Verbos</span>
     <div class="chips four tight" id="kinds" role="group" aria-labelledby="l-k"></div>
