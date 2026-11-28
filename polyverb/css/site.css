@@ -74,6 +74,10 @@ button{cursor:pointer;-webkit-tap-highlight-color:transparent}
 /* Footer: a hairline the width of the text column, then the credit */
 .foot{width:calc(100% - 40px);max-width:500px;margin:0 auto;padding:18px 0 32px;border-top:1px solid var(--line);color:var(--muted);font-style:italic;font-size:.85rem;text-align:right}
 
+/* The footer's link back to the Tincture Project */
+.foot a{color:inherit;text-decoration:underline;text-decoration-color:var(--edge);text-decoration-thickness:1px;text-underline-offset:3px;border-radius:2px}
+@media (hover:hover){.foot a:hover{color:var(--ink);text-decoration-color:currentColor}}
+
 /* English on hover (gloss.js): a small ink slip, shown only to a mouse */
 .gloss{position:fixed;left:0;top:0;z-index:20;max-width:min(320px,calc(100vw - 16px));padding:5px 10px 6px;border-radius:5px;background:var(--ink);color:var(--paper);font:italic .88rem/1.4 var(--serif);text-align:left;pointer-events:none;opacity:0;transition:opacity .12s}
 .gloss.on{opacity:1}
