@@ -255,7 +255,7 @@ multiChoice(
 
 // ---- The round ----
 
-let questions = [], questionIndex = 0, score = 0, mistakes = [];
+let questions = [], questionIndex = 0, score = 0, slips = 0, mistakes = [];
 let phase = ""; // "ask" while the player types, "review" while the answer shows
 
 function startRound() {
@@ -274,6 +274,7 @@ function startRound() {
   swapInRegularVerbs(questions.filter(question => isRegularModel(question.verb)));
   questionIndex = 0;
   score = 0;
+  slips = 0;
   mistakes = [];
   showSection("quiz");
   showQuestion();
@@ -308,7 +309,7 @@ function showQuestion() {
   phase = "ask";
   setText(progress, `Pergunta ${number} de ${total}`, `Question ${number} of ${total}`);
   showScore();
-  showProgress(progressBar, questionIndex, score, total);
+  showProgress(progressBar, questionIndex, score, total, slips);
   setText(byId("verb"), question.verb, ENGLISH[question.verb]);
   const tenseLabel = byId("tense");
   withEnglish(setTextMarkingSubjunctive(tenseLabel, TENSES[question.tense]), TENSES_EN[question.tense]);
@@ -334,20 +335,23 @@ function checkAnswer() {
   const meant = isExact ? null : answerWithStemSlip(typed, question);
   const isRight = isExact || meant !== null;
   const matches = isRight ? null : identifyForm(typed, question);
+  // A slip in the stem still scores, but shows amber, so it doesn't pass for a clean answer
   if (isRight) score++;
-  else mistakes.push({ question, typed: asTyped, matches });
+  if (meant) slips++;
+  if (!isRight) mistakes.push({ question, typed: asTyped, matches });
 
   answerInput.readOnly = true;
-  answerInput.className = isRight ? "ok" : "bad";
+  const state = meant ? "slip" : isRight ? "ok" : "bad";
+  answerInput.className = state;
   setLetterKeysEnabled(false);
   feedback.hidden = false;
-  feedback.className = "fb " + (isRight ? "ok" : "bad");
+  feedback.className = "fb " + state;
   feedback.textContent = "";
   if (isRight) {
-    feedback.append(setText(makeElement("span"), "Correto", "Correct"));
+    feedback.append(meant ? setText(makeElement("span"), "Gralha", "Typo") : setText(makeElement("span"), "Correto", "Correct"));
     const alsoAccepted = question.answers.filter(answer => normalizeAnswer(answer) !== typed);
     if (meant) {
-      feedback.append(setText(makeElement("span", "k"), `Gralha no radical: escreve-se «${meant}»`, `A typo in the stem: it's spelled «${meant}»`));
+      feedback.append(setText(makeElement("span", "k"), `no radical: escreve-se «${meant}»`, `in the stem: it's spelled «${meant}»`));
     } else if (alsoAccepted.length) {
       const note = setText(makeElement("span", "k"), "também ", "also accepted: " + alsoAccepted.join(", "));
       appendOr(note, alsoAccepted);
@@ -363,7 +367,7 @@ function checkAnswer() {
     }
   }
   showScore();
-  showProgress(progressBar, questionIndex + 1, score, questions.length);
+  showProgress(progressBar, questionIndex + 1, score, questions.length, slips);
   const isLast = questionIndex === questions.length - 1;
   setText(mainButton, isLast ? "Ver resultados" : "Seguinte", isLast ? "See results" : "Next");
   phase = "review";

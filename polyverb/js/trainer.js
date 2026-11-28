@@ -86,10 +86,12 @@ function multiChoice(container, options, getChosen, setChosen) {
 }
 
 // The progress bar: as long as the share of questions answered, green for the right answers
-// first, then red for the wrong ones.
-function showProgress(bar, answered, right, total) {
+// first, amber for slips (right answers with a typo, counted among the right ones), then red for
+// the wrong ones.
+function showProgress(bar, answered, right, total, slips = 0) {
   bar.style.width = (answered / total * 100) + "%";
   bar.style.setProperty("--right", (answered ? right / answered * 100 : 100) + "%");
+  bar.style.setProperty("--clean", (answered ? (right - slips) / answered * 100 : 100) + "%");
 }
 
 // ---- Sections ----

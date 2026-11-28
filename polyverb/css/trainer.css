@@ -39,8 +39,8 @@ body.wide .nav .in,body.wide .mast .in,body.wide main{max-width:1100px}
 /* Quiz */
 .top{display:flex;justify-content:space-between;margin-bottom:10px;color:var(--muted);font-style:italic;font-size:.94rem;font-variant-numeric:lining-nums}
 .bar{height:3px;margin-bottom:24px;background:var(--sunk);border-radius:2px;overflow:hidden}
-/* Green for right answers, then red for wrong ones; showProgress() sets --right */
-#fill{height:100%;width:0;background:linear-gradient(to right,var(--ok) var(--right,100%),var(--bad) 0);transition:width .3s ease-out}
+/* Green for right answers, amber for right but for a typo, then red for wrong ones; showProgress() sets --clean and --right */
+#fill{height:100%;width:0;background:linear-gradient(to right,var(--ok) var(--clean,var(--right,100%)),var(--warn) 0 var(--right,100%),var(--bad) 0);transition:width .3s ease-out}
 .verb{font-weight:600;font-size:clamp(2.6rem,12vw,3.3rem);line-height:1.05;letter-spacing:-.015em;text-align:center;overflow-wrap:anywhere}
 .tense{margin:10px 0 0;color:var(--tag);font-style:italic;font-size:1.12rem;line-height:1.3;text-align:center}
 .who{margin:4px 0 10px;text-align:center;font-size:1.3rem;line-height:1.3}
@@ -62,11 +62,13 @@ body.wide .nav .in,body.wide .mast .in,body.wide main{max-width:1100px}
 #ans:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--ring)}
 #ans.ok{border-color:var(--ok);background:var(--okbg);box-shadow:none}
 #ans.bad{border-color:var(--bad);background:var(--badbg);box-shadow:none}
+#ans.slip{border-color:var(--warn);background:var(--warnbg);box-shadow:none}
 .fb{margin:12px 0 0;padding:10px 14px 11px;border-radius:6px;font-size:1rem;line-height:1.4;text-align:center}
 .fb .fa{color:var(--ink);font-weight:600;font-size:1.22rem}
 .fb .k{display:block;margin-top:3px;color:var(--muted);font-style:italic;font-size:.9rem}
 .fb.ok{background:var(--okbg);color:var(--ok)}
 .fb.bad{background:var(--badbg);color:var(--bad)}
+.fb.slip{background:var(--warnbg);color:var(--warn)}
 #go{margin-top:16px}
 /* Letters with diacritics, for keyboards that can't type them. Each page sets --keys, its column count. */
 .keys{display:grid;grid-template-columns:repeat(var(--keys,9),minmax(0,1fr));gap:4px;margin:10px 0 0}
