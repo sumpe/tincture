@@ -134,7 +134,7 @@ function startRound() {
   score = 0;
   mistakes = [];
   const typing = roundGame === "plural";
-  answerInput.hidden = byId("keys").hidden = !typing;
+  answerInput.hidden = byId("keys").hidden = byId("keytog").hidden = !typing;
   byId("pick").hidden = typing;
   setText(byId("ask"), typing ? "O plural de" : "O ou a?", typing ? "The plural of" : "O or a?");
   showSection("quiz");

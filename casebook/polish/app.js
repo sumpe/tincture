@@ -166,7 +166,7 @@ function chooseQuestions() {
 function startRound() {
   roundMode = mode;
   const picking = roundMode === "gender";
-  answerInput.hidden = byId("keys").hidden = byId("case").hidden = byId("frame").hidden = picking;
+  answerInput.hidden = byId("keys").hidden = byId("keytog").hidden = byId("case").hidden = byId("frame").hidden = picking;
   byId("pick").hidden = byId("ask").hidden = !picking;
   questions = chooseQuestions();
   questionIndex = 0;

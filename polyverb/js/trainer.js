@@ -173,6 +173,39 @@ function addLetterKeys(letters, getTargetInput) {
     key.onclick = () => typeLetter(letter);
     byId("keys").appendChild(key);
   }
+  addKeysToggle(letters);
+}
+
+// The keys start hidden: phones, and most keyboards, have these letters already. A small button under
+// the answer shows them, and the choice is remembered for the language, in every game (the address
+// ends …/portuguese/, …/polish/ or …/swedish/).
+function addKeysToggle(letters) {
+  const keys = byId("keys");
+  const language = new URL(".", location.href).pathname.split("/").filter(Boolean).pop();
+  const storageKey = "tincture-keys-" + language;
+  const toggle = makeElement("button", "keytog");
+  toggle.id = "keytog";
+  toggle.type = "button";
+  toggle.setAttribute("aria-controls", "keys");
+  toggle.setAttribute("aria-label", keys.getAttribute("aria-label"));
+  toggle.innerHTML = '<span></span><svg viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg>';
+  toggle.firstChild.textContent = letters.length > 3 ? letters.slice(0, 3).join(" ") + " …" : letters.join(" ");
+  toggle.addEventListener("mousedown", event => event.preventDefault());
+  // An inline style, as a page may use the hidden attribute itself, to hide the keys with the toggle
+  // in a game played by buttons
+  const show = shown => {
+    keys.style.display = shown ? "" : "none";
+    toggle.setAttribute("aria-expanded", String(shown));
+  };
+  let remembered = null;
+  try { remembered = localStorage.getItem(storageKey); } catch { /* not remembered */ }
+  show(remembered === "shown");
+  toggle.onclick = () => {
+    const shown = toggle.getAttribute("aria-expanded") !== "true";
+    show(shown);
+    try { localStorage.setItem(storageKey, shown ? "shown" : "hidden"); } catch { /* not remembered */ }
+  };
+  keys.before(toggle);
 }
 
 function setLetterKeysEnabled(enabled) {
