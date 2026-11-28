@@ -244,6 +244,7 @@ function showVariant() {
   setText(byId("sub"), ...SUBTITLES[variant]);
   document.documentElement.lang = isBrazilian() ? "pt-BR" : "pt-PT";
   byId("vos-row").hidden = isBrazilian();
+  showAllCount();
 }
 showVariant();
 multiChoice(
@@ -253,17 +254,29 @@ multiChoice(
   chosen => { chosenGroups = chosen; showAllCount(); }
 );
 
-// "Todos": one form of every verb in the chosen groups; for the regular group, every verb in REGULAR_VERBS
-function verbsForAll() {
-  const irregular = Object.keys(VERB_TABLES).filter(verb => chosenGroups.includes(GROUP_OF_VERB[verb]) && !isRegularModel(verb));
-  const regular = chosenGroups.includes("regular") ? [...new Set(Object.values(REGULAR_VERBS).flat())] : [];
-  return { irregular, regular };
+// "Todos": one form of every irregular verb in the chosen groups, and with the regular group, every
+// regular form: each tense and person of -ar, -er and -ir, each on a regular verb of that conjugation.
+// The tenses and persons are those the settings leave in.
+function slotsInUse() {
+  const persons = personsInUse().filter(person => person !== VOS || byId("vos").checked);
+  const skipFutureAndConditional = byId("syn").checked;
+  const slots = [];
+  VERB_TABLES.ser.forEach((_, tense) => {
+    if (skipFutureAndConditional && (tense === FUTURE || tense === CONDITIONAL)) return;
+    for (const person of persons) slots.push({ tense, person });
+  });
+  return slots;
+}
+function irregularVerbsChosen() {
+  return Object.keys(VERB_TABLES).filter(verb => chosenGroups.includes(GROUP_OF_VERB[verb]) && !isRegularModel(verb));
 }
 function showAllCount() {
-  const { irregular, regular } = verbsForAll();
-  byId("all-n").textContent = irregular.length + regular.length;
+  const regularForms = chosenGroups.includes("regular") ? 3 * slotsInUse().length : 0;
+  byId("all-n").textContent = irregularVerbsChosen().length + regularForms;
 }
 showAllCount();
+byId("vos").addEventListener("change", showAllCount);
+byId("syn").addEventListener("change", showAllCount);
 
 // ---- The round ----
 
@@ -282,7 +295,7 @@ function startRound() {
       for (const person of persons) candidates.push({ verb, tense, person, answers: answersFor(tenseForms, person) });
     });
   }
-  if (questionCount === "all") questions = oneFormOfEveryVerb(persons, skipFutureAndConditional);
+  if (questionCount === "all") questions = oneFormOfEveryVerb();
   else {
     questions = shuffled(candidates).slice(0, questionCount);
     swapInRegularVerbs(questions.filter(question => isRegularModel(question.verb)));
@@ -295,30 +308,45 @@ function startRound() {
   showQuestion();
 }
 
-// Every verb once, in random order. The tenses and persons are dealt out evenly, like cards: each
-// tense and person comes up once before any comes up again.
-function oneFormOfEveryVerb(persons, skipFutureAndConditional) {
-  const slots = [];
-  VERB_TABLES.ser.forEach((_, tense) => {
-    if (skipFutureAndConditional && (tense === FUTURE || tense === CONDITIONAL)) return;
-    for (const person of persons) slots.push({ tense, person });
-  });
-  const { irregular, regular } = verbsForAll();
-  let deck = [];
-  const deal = () => {
-    if (!deck.length) deck = shuffled(slots);
-    return deck.pop();
+// The irregular verbs once each, in a tense and person dealt out evenly, like cards: each comes up
+// once before any comes up again. The regular forms all once, each on a verb dealt the same way from
+// its conjugation. Then all in random order.
+function oneFormOfEveryVerb() {
+  const slots = slotsInUse();
+  const dealer = cards => {
+    let deck = [];
+    return () => {
+      if (!deck.length) deck = shuffled(cards);
+      return deck.pop();
+    };
   };
-  return shuffled([
-    ...irregular.map(verb => {
-      const { tense, person } = deal();
-      return { verb, tense, person, answers: answersFor(VERB_TABLES[verb][tense], person) };
-    }),
-    ...regular.map(verb => {
-      const { tense, person } = deal();
-      return { verb, tense, person, isRegular: true, answers: answersFor(conjugateRegular(verb)[tense], person) };
-    })
-  ]);
+  const dealSlot = dealer(slots);
+  const questions = irregularVerbsChosen().map(verb => {
+    const { tense, person } = dealSlot();
+    return { verb, tense, person, answers: answersFor(VERB_TABLES[verb][tense], person) };
+  });
+  if (chosenGroups.includes("regular")) {
+    for (const conjugation of ["ar", "er", "ir"]) {
+      const dealVerb = dealer(REGULAR_VERBS[conjugation]);
+      for (const { tense, person } of slots) {
+        const verb = dealVerb();
+        questions.push({ verb, tense, person, isRegular: true, answers: answersFor(conjugateRegular(verb)[tense], person) });
+      }
+    }
+  }
+  return withoutRepeats(shuffled(questions));
+}
+
+// A regular verb comes up several times in a round; this keeps the same verb from coming up twice in
+// a row, swapping a repeat with another question that fits in its place.
+function withoutRepeats(questions) {
+  for (let k = 1; k < questions.length; k++) {
+    if (questions[k].verb !== questions[k - 1].verb) continue;
+    const swap = questions.findIndex((other, j) => Math.abs(j - k) > 1 && other.verb !== questions[k - 1].verb &&
+      other.verb !== questions[k + 1]?.verb && questions[j - 1].verb !== questions[k].verb && questions[j + 1]?.verb !== questions[k].verb);
+    if (swap > 0) [questions[k], questions[swap]] = [questions[swap], questions[k]];
+  }
+  return questions;
 }
 
 // Each question on a model verb gets a regular verb of its own instead, with the
