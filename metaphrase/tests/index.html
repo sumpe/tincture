@@ -26,6 +26,7 @@ iframe{position:absolute;left:-9999px;width:400px;height:800px;border:0}
 <!-- The data and marking checks load the sentences and check.js directly; the game check plays a round in the page. -->
 <script src="../js/trainer.js"></script>
 <script src="../portuguese/sentences.js"></script>
+<script src="../portuguese/glosses.js"></script>
 <script src="../portuguese/check.js"></script>
 <script>
 const suites = new Map();
@@ -191,6 +192,42 @@ check("Marking: marks", brMarked.map(w => w.shown).join(" ") === "Ela perdeu o c
 const missing = markAnswer(find("I work in a bank."), "pe", "Trabalho banco").marked;
 check("Marking: marks", missing.filter(w => w.changed).map(w => w.shown).join() === "num", "a missing word is marked: " + missing.map(w => w.shown + (w.changed ? "*" : "")).join(" "));
 
+// ---- Gloss mode ----
+
+// Every word of the English is glossed or left out on purpose, and every gloss is in the answers:
+// the infinitive's stem, or the noun's first letters, turns up in the sentence's pattern.
+const plain = text => stripAccents(text).toLowerCase().replace(/ç/g, "c");
+const usedGlosses = new Set();
+for (const sentence of SENTENCES) {
+  for (const key of Object.keys(GLOSS_OVERRIDES[sentence.english] || {})) {
+    check("Glosses: overrides", sentence.english.toLowerCase().includes(key), `${sentence.english}: no "${key}" to override`);
+  }
+  for (const variety of VARIETIES) {
+    const pattern = plain(sentence.patterns[variety]);
+    for (const { text, gloss } of glossSegments(sentence, variety)) {
+      const words = text.match(/[\p{L}’']+/gu) || [];
+      if (!gloss) {
+        for (const word of words) check("Glosses: every word glossed or left out", NOT_GLOSSED.has(glossKey(word)), `${sentence.english}: "${word}"`);
+        continue;
+      }
+      words.forEach(word => usedGlosses.add(glossKey(word)));
+      check("Glosses: a gloss for each variety", typeof gloss === "string" && gloss.length > 0, `${sentence.english} (${variety}): "${text}"`);
+      const main = plain(gloss).split(" ").find(word => !["o", "a", "os", "as"].includes(word));
+      const stem = main.slice(0, Math.max(3, Math.min(5, main.length - 2)));
+      check("Glosses: in the answers", pattern.includes(stem), `${sentence.english} (${variety}): "${text}" → "${gloss}", but no "${stem}" in the pattern`);
+    }
+  }
+}
+const unusedGlosses = Object.keys(GLOSSES).filter(key => !usedGlosses.has(key));
+check("Glosses: none unused", unusedGlosses.length === 0, "unused: " + unusedGlosses.join(", "));
+const glossOf = (english, variety, word) => glossSegments(find(english), variety).find(segment => segment.text === word)?.gloss;
+check("Glosses", glossOf("We decided to sell the car.", "pe", "decided") === "decidir", "decided → decidir");
+check("Glosses", glossOf("I work in a bank.", "pe", "work") === "trabalhar" && glossOf("I take the bus to work every day.", "pe", "work") === "o trabalho", "work: the verb after I, the noun after to");
+check("Glosses", glossOf("I take the bus to work every day.", "br", "take") === "pegar" && glossOf("He takes the dog to the park.", "pe", "takes") === "levar", "take, by sentence");
+check("Glosses", glossOf("You (informal) wear glasses to read.", "pe", "glasses") === "os óculos", "always-plural nouns stay plural");
+check("Glosses", glossOf("We had dinner with our neighbours at nine o’clock.", "pe", "had dinner") === "jantar", "had dinner is one gloss");
+check("Glosses", glossOf("She lost her phone on the train.", "br", "train") === "o trem", "Brazilian glosses");
+
 // ---- Playing the game ----
 
 function loadPage(src) {
@@ -233,6 +270,20 @@ async function playGame() {
     check("Game", doc.querySelectorAll("#miss tbody tr").length === total - expected, `${name}: rows to review`);
     doc.getElementById("change").click();
   }
+  // Gloss mode, from the card's own toggle
+  doc.querySelector(`#variant [data-v="pe"]`).click();
+  doc.getElementById("start").click();
+  doc.getElementById("gtog").click();
+  const glossed = [...doc.querySelectorAll("#en .gw")];
+  check("Game: gloss mode", glossed.length > 0 && glossed.every(word => word.dataset.pt), "no glossed words after turning it on");
+  check("Game: gloss mode", doc.getElementById("en").textContent === win.eval("questions[questionIndex]").english, "the sentence reads the same with glosses");
+  glossed[0].dispatchEvent(new win.PointerEvent("pointerover", { bubbles: true, pointerType: "mouse" }));
+  const slip = doc.querySelector("body > .gloss.on");
+  check("Game: gloss mode", slip && slip.textContent === glossed[0].dataset.pt, "hovering shows the base form");
+  check("Game: gloss mode", win.localStorage.getItem("metaphrase-pt-gloss") === "on" && doc.getElementById("gloss").checked, "the setting is saved and the setup switch follows");
+  doc.getElementById("gtog").click();
+  check("Game: gloss mode", !doc.querySelector("#en .gw") && !doc.querySelector("body > .gloss.on"), "turning it off removes the marks and the slip");
+  doc.getElementById("change").click();
   check("Game: the variety is remembered", win.localStorage.getItem("metaphrase-pt-variant") === "pe", "not saved");
 
   win.location.hash = "#tables";

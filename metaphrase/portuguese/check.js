@@ -304,3 +304,41 @@ function explainSwap(typed, answer, variety) {
   if (letterDistance(tk, ak) === 1) return [`${swap}: uma letra.`, `${swapEn}: one letter.`];
   return null;
 }
+
+// ---- Gloss mode ----
+
+// After a subject, a word like "work" is the verb (I work); anywhere else, the noun (at work).
+const SUBJECT_WORDS = new Set(["i", "you", "he", "she", "we", "they", "informal"]);
+const glossKey = word => word.toLowerCase().replace(/[’']s$/, "");
+const forVariety = (entry, variety) => typeof entry === "string" ? entry : entry[variety];
+
+// The English as pieces of text, each noun and verb with its Portuguese base form for the variety:
+// [{ text: "We " }, { text: "decided", gloss: "decidir" }, { text: " to " }, …]
+function glossSegments(sentence, variety) {
+  const overrides = GLOSS_OVERRIDES[sentence.english] || {};
+  const parts = sentence.english.split(/([\p{L}’']+)/u); // the words are at the odd places
+  const segments = [];
+  let previous = null;
+  for (let k = 0; k < parts.length; k++) {
+    const part = parts[k];
+    if (k % 2 === 0) {
+      if (part) segments.push({ text: part });
+      continue;
+    }
+    if (k + 2 < parts.length && parts[k + 1] === " ") {
+      const phrase = GLOSS_PHRASES[glossKey(part) + " " + glossKey(parts[k + 2])];
+      if (phrase) {
+        segments.push({ text: part + " " + parts[k + 2], gloss: forVariety(phrase, variety) });
+        previous = glossKey(parts[k + 2]);
+        k += 2;
+        continue;
+      }
+    }
+    const key = glossKey(part);
+    let entry = overrides[key] ?? GLOSSES[key];
+    if (entry && entry.verb) entry = SUBJECT_WORDS.has(previous) ? entry.verb : entry.noun;
+    segments.push(entry ? { text: part, gloss: forVariety(entry, variety) } : { text: part });
+    previous = key;
+  }
+  return segments;
+}

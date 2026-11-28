@@ -54,6 +54,78 @@ function showVariety() {
   document.documentElement.lang = variety === "br" ? "pt-BR" : "pt-PT";
 }
 
+// ---- Gloss mode ----
+
+// When it's on, the nouns and verbs of the English show their Portuguese base form on hover or tap.
+let glossMode = loadSetting("gloss", "off") === "on";
+const glossSlip = makeElement("div", "gloss");
+glossSlip.setAttribute("aria-hidden", "true");
+document.body.append(glossSlip);
+let glossedWord = null;
+
+function setGlossMode(on) {
+  glossMode = on;
+  saveSetting("gloss", on ? "on" : "off");
+  byId("gloss").checked = on;
+  byId("gtog").setAttribute("aria-pressed", String(on));
+  if (questions.length && !byId("quiz").hidden) showEnglish(questions[questionIndex]);
+}
+
+// The sentence, its nouns and verbs underlined with dots in gloss mode
+function showEnglish(sentence) {
+  hideGloss();
+  const line = byId("en");
+  line.textContent = "";
+  if (!glossMode) { line.textContent = sentence.english; return; }
+  for (const { text, gloss } of glossSegments(sentence, roundVariety)) {
+    if (!gloss) { line.append(text); continue; }
+    const word = makeElement("span", "gw", text);
+    word.dataset.pt = gloss;
+    word.tabIndex = 0;
+    line.append(word);
+  }
+}
+
+// The slip above the word, kept inside the window; below the word when there's no room above
+function showGloss(word) {
+  glossedWord = word;
+  glossSlip.textContent = word.dataset.pt;
+  glossSlip.lang = roundVariety === "br" ? "pt-BR" : "pt-PT";
+  const box = word.getBoundingClientRect(), width = document.documentElement.clientWidth;
+  const left = Math.max(8, Math.min(box.left + box.width / 2 - glossSlip.offsetWidth / 2, width - glossSlip.offsetWidth - 8));
+  let top = box.top - glossSlip.offsetHeight - 6;
+  if (top < 8) top = box.bottom + 6;
+  glossSlip.style.left = left + "px";
+  glossSlip.style.top = top + "px";
+  glossSlip.classList.add("on");
+}
+function hideGloss() {
+  glossedWord = null;
+  glossSlip.classList.remove("on");
+}
+
+{
+  const line = byId("en");
+  const glossedIn = event => event.target.closest ? event.target.closest(".gw") : null;
+  // A mouse shows the slip while it rests on the word; a finger or pen taps it on and off.
+  line.addEventListener("pointerover", event => { if (event.pointerType === "mouse" && glossedIn(event)) showGloss(glossedIn(event)); });
+  line.addEventListener("pointerout", event => { const word = glossedIn(event); if (word && !word.contains(event.relatedTarget)) hideGloss(); });
+  line.addEventListener("pointerup", event => {
+    const word = glossedIn(event);
+    if (!word || event.pointerType === "mouse") return;
+    if (glossedWord === word) hideGloss(); else showGloss(word);
+  });
+  line.addEventListener("focusin", event => { if (glossedIn(event)) showGloss(glossedIn(event)); });
+  line.addEventListener("focusout", hideGloss);
+  document.addEventListener("pointerdown", event => { if (!glossedIn(event)) hideGloss(); });
+  addEventListener("scroll", hideGloss, true);
+}
+
+byId("gloss").checked = glossMode;
+byId("gtog").setAttribute("aria-pressed", String(glossMode));
+byId("gloss").onchange = event => setGlossMode(event.target.checked);
+byId("gtog").onclick = () => setGlossMode(!glossMode);
+
 singleChoice("variant", chooseVariety);
 singleChoice("tbl-variant", chooseVariety);
 singleChoice("tense", value => { tense = value; describePool(); });
@@ -125,7 +197,7 @@ function showQuestion() {
   setText(progress, `Frase ${number} de ${total}`, `Sentence ${number} of ${total}`);
   showScore();
   showProgress(progressBar, questionIndex, score, total);
-  byId("en").textContent = sentence.english;
+  showEnglish(sentence);
   const [portuguese, english] = TENSES[sentence.tense];
   const voce = roundVariety === "br" && sentence.english.startsWith("You (informal)");
   setText(byId("tag"), portuguese + (voce ? " · you = você" : ""), english + (voce ? " · you is você" : ""));
@@ -195,6 +267,7 @@ onEnter(answerInput, onMainButton);
 // ---- Results ----
 
 function showResults() {
+  hideGloss();
   showSection("done");
   const total = questions.length, percent = Math.round(score / total * 100);
   byId("res").textContent = `${score} / ${total}`;

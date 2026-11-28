@@ -52,6 +52,22 @@ textarea{font:inherit;color:inherit}
 #tbl th:first-child{position:static}
 #tbl td:last-child{font-weight:600}
 #setup .link{display:flex;justify-content:center;margin-top:10px}
+/* The gloss mode's switch, as in Polyverb */
+.switch{position:relative;display:flex;align-items:center;gap:14px;min-height:50px;padding:8px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);line-height:1.35;cursor:pointer}
+.switch input{position:absolute;left:0;top:50%;width:44px;height:26px;margin:-13px 0 0;opacity:0;cursor:pointer}
+.track{position:relative;flex:none;width:44px;height:26px;border-radius:13px;background:var(--edge);transition:background-color .15s}
+.track::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:var(--card);box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .15s}
+.switch input:checked+.track{background:var(--fill)}
+.switch input:checked+.track::after{transform:translateX(18px)}
+.switch input:focus-visible+.track{outline:2px solid var(--focus);outline-offset:2px}
+.switch small{display:block;margin-top:2px;color:var(--muted);font-size:.86rem}
+/* Gloss mode: nouns and verbs underlined with dots; the base form shows on hover or tap */
+.gw{text-decoration:underline dotted var(--accent);text-decoration-thickness:1.5px;text-underline-offset:.22em;border-radius:3px;cursor:help}
+.gw:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.gtog{min-height:32px;padding:0 11px;border:1px solid var(--line);border-radius:999px;background:transparent;color:var(--muted);font-size:.85rem;font-style:normal;transition:background-color .15s,border-color .15s,color .15s}
+.gtog[aria-pressed="true"]{background:var(--tint);border-color:var(--accent);color:var(--accent);font-weight:600}
+.top{align-items:center}
+@media (hover:hover){.gtog:hover{border-color:var(--edge)}}
 .keys{--keys:12}
 @media (max-width:480px){.keys{--keys:6}}
 </style>
@@ -92,12 +108,17 @@ textarea{font:inherit;color:inherit}
       <button data-v="30" aria-pressed="false">30</button>
       <button data-v="40" aria-pressed="false">40</button>
     </div>
+    <label class="switch">
+      <input type="checkbox" id="gloss">
+      <span class="track"></span>
+      <span><span data-en="Base forms">Formas base</span><small data-en="Hover over (or tap) a noun or verb for its Portuguese base form: the infinitive, or the singular with its article.">Passa o rato (ou toca) num nome ou num verbo para ver a forma base: o infinitivo, ou o singular com o artigo.</small></span>
+    </label>
     <button class="primary" id="start" data-en="Start">Começar</button>
     <a class="link back" href="#tables" data-en="See every sentence">Ver todas as frases</a>
   </section>
 
   <section id="quiz" hidden>
-    <div class="top"><span id="prog"></span><span id="score"></span></div>
+    <div class="top"><span id="prog"></span><button class="gtog" id="gtog" type="button" aria-pressed="false" data-en="Base forms of nouns and verbs, on hover or tap">Formas base</button><span id="score"></span></div>
     <div class="bar"><div id="fill"></div></div>
     <p class="ask" data-en="Translate">Traduz</p>
     <p class="en" id="en" lang="en"></p>
@@ -139,6 +160,7 @@ textarea{font:inherit;color:inherit}
 
 <script src="../js/gloss.js"></script>
 <script src="sentences.js"></script>
+<script src="glosses.js"></script>
 <script src="../js/trainer.js"></script>
 <script src="check.js"></script>
 <script src="app.js"></script>
