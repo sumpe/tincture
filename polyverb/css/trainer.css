@@ -81,6 +81,8 @@ body.wide .nav .in,body.wide .mast .in,body.wide main{max-width:1100px}
 .keytog[aria-expanded="true"] svg{transform:rotate(180deg)}
 .keytog+.keys{margin-top:4px}
 @media (hover:hover){.keytog:hover{color:var(--ink);background:var(--hover)}}
+/* Only phones have the choice: a wider screen has room for the keys, and its keyboard often lacks the letters */
+@media (min-width:601px){.keytog{display:none}.keys:not([hidden]){display:grid!important}}
 
 /* Results */
 #done{padding-top:14px}

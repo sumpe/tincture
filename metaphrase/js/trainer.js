@@ -162,9 +162,10 @@ function addLetterKeys(letters, input) {
   addKeysToggle(letters);
 }
 
-// The keys start hidden: phones, and most keyboards, have these letters already. A small button under
-// the answer shows them, and the choice is remembered for the language, in every game (the address
-// ends …/portuguese/, …/polish/ or …/swedish/).
+// On a phone the keys start hidden, as its keyboard has these letters on a long press. A small button
+// under the answer shows them, and the choice is remembered for the language, in every game (the
+// address ends …/portuguese/, …/polish/ or …/swedish/). On a wider screen the keys always show and
+// the button doesn't (trainer.css).
 function addKeysToggle(letters) {
   const keys = byId("keys");
   const language = new URL(".", location.href).pathname.split("/").filter(Boolean).pop();
