@@ -74,19 +74,6 @@ button{cursor:pointer;-webkit-tap-highlight-color:transparent}
 /* Footer: a hairline the width of the text column, then the credit */
 .foot{width:calc(100% - 40px);max-width:500px;margin:0 auto;padding:18px 0 32px;border-top:1px solid var(--line);color:var(--muted);font-style:italic;font-size:.85rem;text-align:right}
 
-/* The game's name in the navigation bar opens a menu of the three games (games.js) */
-.games{position:relative}
-button.brand{gap:7px;padding:0;border:0;background:none;cursor:pointer}
-.chev{width:10px;height:6px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;transition:transform .15s}
-.brand[aria-expanded="true"] .chev{transform:rotate(180deg)}
-.games-menu{position:absolute;top:calc(100% + 2px);left:-12px;z-index:30;min-width:250px;margin:0;padding:6px;list-style:none;background:var(--card);border:1px solid var(--line);border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,.14)}
-.games-menu a{display:flex;align-items:baseline;justify-content:space-between;gap:18px;min-height:44px;padding:11px 10px;border-radius:5px;color:var(--ink);text-decoration:none;line-height:1.2}
-.games-menu .what{color:var(--muted);font-style:italic;font-size:.9rem}
-.games-menu a[aria-current] .name{color:var(--accent);font-weight:600}
-.games-menu .home{margin-top:6px;padding-top:6px;border-top:1px solid var(--line)}
-.games-menu .home a{color:var(--muted);font-style:italic}
-@media (hover:hover){.games-menu a:hover{background:var(--hover)}}
-
 /* The footer's link back to the Tincture Project */
 .foot a{color:inherit;text-decoration:underline;text-decoration-color:var(--edge);text-decoration-thickness:1px;text-underline-offset:3px;border-radius:2px}
 @media (hover:hover){.foot a:hover{color:var(--ink);text-decoration-color:currentColor}}
