@@ -75,6 +75,9 @@ body.wide .nav .in,body.wide .mast .in,body.wide main{max-width:1100px}
 .keys button{min-height:38px;padding:0;border:1px solid var(--line);border-radius:5px;background:transparent;font-size:1.15rem;line-height:1;transition:background-color .15s,opacity .15s}
 .keys button:disabled{opacity:.35;cursor:default}
 @media (pointer:coarse){.keys button{min-height:44px}}
+/* Phones have these letters on a long press of the plain one, so the keys go; a page whose letters
+   a phone keyboard may lack (Polish ą) marks its keys data-on-phones and keeps them */
+@media (pointer:coarse) and (max-width:600px){.keys:not([data-on-phones]){display:none}}
 
 /* Results */
 #done{padding-top:14px}
@@ -121,6 +124,20 @@ body.play .bar{margin-bottom:16px}
 body.play .pgrid{margin-bottom:16px}
 body.play #go{margin-top:12px}
 body.wide .foot{max-width:1060px}
+/* Tighter still while a phone's keyboard is up (trainer.js sets body.kb), so the verb and the answer
+   both fit in what's left of the screen */
+body.kb #quiz{padding:12px 16px 14px}
+body.kb .top{margin-bottom:6px}
+body.kb .bar{margin-bottom:10px}
+body.kb .verb{font-size:2.2rem}
+body.kb .tense{margin-top:4px;font-size:1.02rem}
+body.kb .who{margin:0 auto 4px;font-size:1.12rem}
+body.kb .tline{margin:0 auto 6px}
+body.kb .pgrid{grid-template-columns:repeat(2,22px);grid-auto-rows:14px;margin-bottom:10px}
+body.kb .pgrid i.on::after{width:6px;height:6px;margin:-3px 0 0 -3px}
+body.kb #ans{min-height:48px;padding:6px 12px;font-size:1.4rem}
+body.kb .fb{margin-top:8px;padding:7px 12px 8px}
+body.kb #go{margin-top:8px}
 
 @media (max-width:400px){
   .mast .in,main{padding-left:16px;padding-right:16px}

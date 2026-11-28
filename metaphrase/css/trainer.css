@@ -83,6 +83,9 @@ body.wide .nav .in,body.wide .mast .in,body.wide main{max-width:1100px}
 .keys button{min-height:38px;padding:0;border:1px solid var(--line);border-radius:5px;background:transparent;font-size:1.15rem;line-height:1;transition:background-color .15s,opacity .15s}
 .keys button:disabled{opacity:.35;cursor:default}
 @media (pointer:coarse){.keys button{min-height:44px}}
+/* Phones have these letters on a long press of the plain one, so the keys go; a page whose letters
+   a phone keyboard may lack (Polish ą) marks its keys data-on-phones and keeps them */
+@media (pointer:coarse) and (max-width:600px){.keys:not([data-on-phones]){display:none}}
 
 /* Results */
 #done{padding-top:14px}

@@ -94,6 +94,35 @@ function showProgress(bar, answered, right, total, slips = 0) {
   bar.style.setProperty("--clean", (answered ? (right - slips) / answered * 100 : 100) + "%");
 }
 
+// ---- Phones ----
+
+// While a phone's keyboard is up, the page takes a compact layout (body.kb), and the question card is
+// scrolled to the top of what the keyboard leaves, keeping the answer in sight; left to itself, the
+// browser scrolls only as far as the answer and can leave the verb under the status bar.
+(function () {
+  const viewport = window.visualViewport;
+  if (!viewport) return;
+  const isTyping = () => document.activeElement?.matches("input[type=text]") ?? false;
+  function bringQuestionIntoView() {
+    const quiz = byId("quiz"), field = document.activeElement;
+    if (!quiz || quiz.hidden || !isTyping()) return;
+    const statusBar = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    const top = viewport.offsetTop + statusBar, bottom = viewport.offsetTop + viewport.height;
+    const toCardTop = quiz.getBoundingClientRect().top - top - 6;
+    const toKeepField = field.getBoundingClientRect().bottom - bottom + 10;
+    const shift = Math.round(Math.max(toCardTop, toKeepField));
+    if (shift) window.scrollBy(0, shift);
+  }
+  function update() {
+    const keyboardUp = isTyping() && viewport.height < document.documentElement.clientHeight * 0.8;
+    document.body.classList.toggle("kb", keyboardUp);
+    if (keyboardUp) requestAnimationFrame(bringQuestionIntoView);
+  }
+  viewport.addEventListener("resize", update);
+  document.addEventListener("focusin", () => { update(); setTimeout(update, 350); });
+  document.addEventListener("focusout", () => setTimeout(update, 100));
+})();
+
 // ---- Sections ----
 
 // Setup, quiz or results; or the tables, whenever the address ends in #tables.
