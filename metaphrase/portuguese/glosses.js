@@ -1,6 +1,8 @@
-// Metaphrase, Portuguese: base forms for the gloss mode, where a noun or verb in the English shows
-// its Portuguese base form: a verb's infinitive, a noun in the singular with its article, or in the
-// plural when that's the only way it's used (os óculos, as férias). The inflection is left to the player.
+// Metaphrase, Portuguese: base forms for the gloss mode, where a word in the English shows its
+// Portuguese base form: a verb's infinitive; a noun in the singular with its article, or in the plural
+// when that's the only way it's used (os óculos, as férias); an adjective in the masculine singular;
+// an adverb. An idiom is glossed as a whole (a lot of → muito), never word by word. The inflection,
+// the contractions and whether the article belongs in the sentence are left to the player.
 //
 // A gloss is a string, or { pe, br } where Portugal and Brazil differ. A word that's a verb after a
 // subject (I work) and a noun elsewhere (at work) is { verb, noun }.
@@ -71,7 +73,7 @@ const GLOSSES = {
   colleagues: "o colega", computer: "o computador", concert: { pe: "o concerto", br: "o show" }, country: "o campo",
   day: "o dia", dinner: "o jantar", dishes: { pe: "a loiça", br: "a louça" }, doctor: "o médico",
   dog: { pe: "o cão", br: "o cachorro" }, door: "a porta", email: "o e-mail", emails: "o e-mail", end: "o fim",
-  evening: "a noite", exam: { pe: "o exame", br: "a prova" }, family: "a família", father: "o pai", fish: "o peixe",
+  exam: { pe: "o exame", br: "a prova" }, family: "a família", father: "o pai", fish: "o peixe",
   flat: "o apartamento", floor: "o andar", flowers: "a flor", football: "o futebol", form: "o formulário",
   friend: "o amigo", friends: "o amigo", fruit: "a fruta", garage: "a garagem", glass: "o copo",
   glasses: "os óculos", grandfather: "o avô", grandmother: "a avó", grandparents: "os avós", hair: "o cabelo",
@@ -80,7 +82,7 @@ const GLOSSES = {
   hour: "a hora", hours: "a hora", house: "a casa", keys: "a chave", kitchen: "a cozinha", law: "o direito",
   letter: "a carta", letters: "a carta", library: "a biblioteca", lunch: "o almoço", manager: "o gerente",
   market: "o mercado", match: "o jogo", maths: "a matemática", medicine: "a medicina", meeting: "a reunião",
-  message: "a mensagem", messages: "a mensagem", middle: "o meio", midnight: "a meia-noite", milk: "o leite",
+  message: "a mensagem", messages: "a mensagem", midnight: "a meia-noite", milk: "o leite",
   minutes: "o minuto", money: "o dinheiro", month: "o mês", morning: "a manhã", mother: "a mãe",
   move: "a mudança", museum: "o museu", name: "o nome", neighbour: "o vizinho", neighbours: "o vizinho",
   news: "a notícia", night: "a noite", north: "o norte", office: "o escritório", paintings: "o quadro",
@@ -95,7 +97,7 @@ const GLOSSES = {
   trains: { pe: "o comboio", br: "o trem" }, truth: "a verdade", umbrella: "o guarda-chuva",
   underground: { pe: "o metro", br: "o metrô" }, university: "a universidade",
   vegetables: "o legume", village: { pe: "a aldeia", br: "o vilarejo" }, wallet: "a carteira",
-  water: "a água", week: "a semana", weekend: "o fim de semana", window: "a janela", windows: "a janela",
+  water: "a água", week: "a semana", window: "a janela", windows: "a janela",
   wine: "o vinho", word: "a palavra", year: "o ano", years: "o ano",
 
   // Days and months
@@ -103,14 +105,39 @@ const GLOSSES = {
   saturday: "o sábado", saturdays: "o sábado", sunday: "o domingo", sundays: "o domingo",
   march: "março", july: "julho", august: "agosto",
 
-  // Places and languages, which go without an article in the sentence (falo português)
+  // Places, with the article where the place takes one; languages with theirs, though the sentence
+  // usually goes without (falo português)
   algarve: "o Algarve", brazil: "o Brasil", coimbra: "Coimbra", europe: "a Europa", faro: "Faro",
   lisbon: "Lisboa", london: "Londres", paris: "Paris", porto: "o Porto", spain: { pe: "Espanha", br: "a Espanha" },
-  english: "inglês", polish: { pe: "polaco", br: "polonês" }, portuguese: "português", swedish: "sueco",
+  english: "o inglês", polish: { pe: "o polaco", br: "o polonês" }, portuguese: "o português", swedish: "o sueco",
+
+  // Adjectives, in the masculine singular
+  big: "grande", bigger: "maior", brazilian: "brasileiro", good: "bom", last: "passado", little: "pouco",
+  long: "longo", new: "novo", old: "velho", same: "mesmo", small: "pequeno", third: "terceiro",
+  every: "todo", all: "todo", whole: "todo",
+
+  // Adverbs, and prepositions Portuguese says in more than one word
+  always: "sempre", early: "cedo", fast: { pe: "depressa", br: "rápido" }, late: "tarde", online: "online",
+  quickly: { pe: "depressa", br: "rápido" }, together: "junto", very: "muito", well: "bem", yesterday: "ontem",
+  near: "perto de", behind: "atrás de", along: "ao longo de",
 };
 
-// Two English words glossed as one
+// Several English words glossed as one, idioms above all; the longest match wins
 const GLOSS_PHRASES = {
+  "a lot of": "muito", "a lot": "muito",
+  "before bed": "antes de dormir",
+  "on time": { pe: "a horas", br: "na hora" },
+  "because of": "por causa de",
+  "too much": { pe: "demasiado", br: "demais" },
+  "very hard": "muito",
+  "in front of": "em frente de",
+  "in the middle of": { pe: "a meio de", br: "no meio de" },
+  "far from": "longe de",
+  "half past": "e meia",
+  "in the morning": "de manhã",
+  "in the evening": "à noite",
+  "at night": "à noite",
+  "at the weekend": { pe: "ao fim de semana", br: "no fim de semana" },
   "had dinner": "jantar",
   "had breakfast": { pe: "tomar o pequeno-almoço", br: "tomar o café da manhã" },
   "eat lunch": "almoçar",
@@ -129,9 +156,7 @@ const GLOSS_OVERRIDES = {
   "She repairs cars in her father’s garage.": { garage: "a oficina" },
 };
 
-// Words that are neither nouns nor verbs, or are part of an idiom (before bed, on time, a lot of)
-const NOT_GLOSSED = new Set(("a about after all along always an and around at because bed before behind big bigger " +
-  "brazilian by early eight every everything far fast five for from front good half hard he her his i in informal " +
-  "last late little long lot much my near new nine o’clock of old on online our past quickly same seven she six " +
-  "small ten the their they third this three time to together too twenty two until very we well whole with " +
-  "yesterday you your").split(" "));
+// Left alone: articles, pronouns, possessives, numbers and simple prepositions
+const NOT_GLOSSED = new Set(("a about after an and around at before by eight everything five for from he her his i " +
+  "in informal my nine o’clock of on our seven she six ten the their they this three to twenty two until we with " +
+  "you your").split(" "));

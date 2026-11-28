@@ -325,14 +325,23 @@ function glossSegments(sentence, variety) {
       if (part) segments.push({ text: part });
       continue;
     }
-    if (k + 2 < parts.length && parts[k + 1] === " ") {
-      const phrase = GLOSS_PHRASES[glossKey(part) + " " + glossKey(parts[k + 2])];
-      if (phrase) {
-        segments.push({ text: part + " " + parts[k + 2], gloss: forVariety(phrase, variety) });
-        previous = glossKey(parts[k + 2]);
-        k += 2;
-        continue;
-      }
+    // The longest idiom starting here, up to four words apart from single spaces
+    let found = null;
+    for (let words = 4; words >= 2 && !found; words--) {
+      const last = k + 2 * (words - 1);
+      if (last >= parts.length) continue;
+      const between = [];
+      for (let j = k + 1; j < last; j += 2) between.push(parts[j]);
+      if (between.some(space => space !== " ")) continue;
+      const key = [];
+      for (let j = k; j <= last; j += 2) key.push(glossKey(parts[j]));
+      if (GLOSS_PHRASES[key.join(" ")]) found = { last, entry: GLOSS_PHRASES[key.join(" ")] };
+    }
+    if (found) {
+      segments.push({ text: parts.slice(k, found.last + 1).join(""), gloss: forVariety(found.entry, variety) });
+      previous = glossKey(parts[found.last]);
+      k = found.last;
+      continue;
     }
     const key = glossKey(part);
     let entry = overrides[key] ?? GLOSSES[key];
