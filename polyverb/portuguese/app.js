@@ -256,7 +256,9 @@ multiChoice(
 
 // "Todos": every form in the chosen groups. Every tense and person of each irregular verb, and with
 // the regular group, every tense and person of -ar, -er and -ir, each on a regular verb of that
-// conjugation. The tenses and persons are those the settings leave in.
+// conjugation; but a tense whose endings go on the whole infinitive (ENDINGS_ON_INFINITIVE: the
+// future, the conditional, the future subjunctive) is the same in all three, so each of its persons
+// comes up once, on one of the three. The tenses and persons are those the settings leave in.
 function slotsInUse() {
   const persons = personsInUse().filter(person => person !== VOS || byId("vos").checked);
   const skipFutureAndConditional = byId("syn").checked;
@@ -271,9 +273,10 @@ function irregularVerbsChosen() {
   return Object.keys(VERB_TABLES).filter(verb => chosenGroups.includes(GROUP_OF_VERB[verb]) && !isRegularModel(verb));
 }
 function showAllCount() {
-  const slots = slotsInUse().length;
-  const regularForms = chosenGroups.includes("regular") ? 3 * slots : 0;
-  byId("all-n").textContent = irregularVerbsChosen().length * slots + regularForms;
+  const slots = slotsInUse();
+  const onInfinitive = slots.filter(({ tense }) => tense in ENDINGS_ON_INFINITIVE).length;
+  const regularForms = chosenGroups.includes("regular") ? 3 * (slots.length - onInfinitive) + onInfinitive : 0;
+  byId("all-n").textContent = irregularVerbsChosen().length * slots.length + regularForms;
 }
 showAllCount();
 byId("vos").addEventListener("change", showAllCount);
@@ -310,7 +313,8 @@ function startRound() {
 }
 
 // Every form once: the irregular verbs' own, and the regular ones each on a verb dealt from its
-// conjugation like a card, each verb once before any comes up again. Then all in random order.
+// conjugation like a card, each verb once before any comes up again (the conjugations for the tenses
+// on the infinitive are dealt the same way). Then all in random order.
 function everyForm() {
   const slots = slotsInUse();
   const dealer = cards => {
@@ -325,12 +329,15 @@ function everyForm() {
     for (const { tense, person } of slots) questions.push({ verb, tense, person, answers: answersFor(VERB_TABLES[verb][tense], person) });
   }
   if (chosenGroups.includes("regular")) {
-    for (const conjugation of ["ar", "er", "ir"]) {
-      const dealVerb = dealer(REGULAR_VERBS[conjugation]);
-      for (const { tense, person } of slots) {
-        const verb = dealVerb();
-        questions.push({ verb, tense, person, isRegular: true, answers: answersFor(conjugateRegular(verb)[tense], person) });
-      }
+    const dealVerb = { ar: dealer(REGULAR_VERBS.ar), er: dealer(REGULAR_VERBS.er), ir: dealer(REGULAR_VERBS.ir) };
+    const dealConjugation = dealer(["ar", "er", "ir"]);
+    const ask = (conjugation, tense, person) => {
+      const verb = dealVerb[conjugation]();
+      questions.push({ verb, tense, person, isRegular: true, answers: answersFor(conjugateRegular(verb)[tense], person) });
+    };
+    for (const { tense, person } of slots) {
+      if (tense in ENDINGS_ON_INFINITIVE) ask(dealConjugation(), tense, person);
+      else for (const conjugation of ["ar", "er", "ir"]) ask(conjugation, tense, person);
     }
   }
   return withoutRepeats(shuffled(questions));
