@@ -39,8 +39,8 @@ body.wide .nav .in,body.wide .mast .in,body.wide main{max-width:1100px}
 /* Quiz */
 .top{display:flex;justify-content:space-between;gap:12px;margin-bottom:10px;color:var(--muted);font-style:italic;font-size:.94rem;font-variant-numeric:lining-nums}
 .bar{height:3px;margin-bottom:24px;background:var(--sunk);border-radius:2px;overflow:hidden}
-/* Green for right answers, then red for wrong ones; showProgress() sets --right */
-#fill{height:100%;width:0;background:linear-gradient(to right,var(--ok) var(--right,100%),var(--bad) 0);transition:width .3s ease-out}
+/* Bright green for right answers, then red for wrong ones; showProgress() sets --right; brighter than the colours elsewhere, so they differ in lightness as well as hue and a thin slice still shows */
+#fill{height:100%;width:0;background:linear-gradient(to right,#1fb84a var(--right,100%),#ec2f2f 0);transition:width .3s ease-out}
 .ask{margin:0 0 6px;color:var(--muted);font-style:italic;text-align:center}
 .word{font-weight:600;font-size:clamp(2.4rem,11vw,3.1rem);line-height:1.08;letter-spacing:-.015em;text-align:center;overflow-wrap:anywhere}
 /* The question hugs its words, so a hover shows English only over the text itself */
