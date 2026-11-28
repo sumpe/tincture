@@ -303,6 +303,20 @@ async function playGame() {
   }
   doc.querySelector(`#tbl-variant [data-v="br"]`).click();
   check("Sentence list", doc.querySelector("#tbl thead th:last-child").textContent === "Português do Brasil", "the variety heading doesn't follow the choice");
+  // The game's name opens the menu of games
+  const brand = doc.querySelector(".nav .brand"), menu = doc.getElementById("games-menu");
+  check("Games menu", brand && brand.tagName === "BUTTON" && menu && menu.hidden, "the name isn't a closed menu button");
+  brand.click();
+  const items = [...menu.querySelectorAll("a")];
+  check("Games menu", !menu.hidden && brand.getAttribute("aria-expanded") === "true", "clicking the name doesn't open it");
+  check("Games menu", items.map(a => a.textContent).join("|") === "Polyverbverbs|Casebooknouns|Metaphrasesentences|The Tincture Project", items.map(a => a.textContent).join("|"));
+  check("Games menu", items.map(a => new URL(a.href).pathname.replace(/^.*?\/(?=(polyverb|casebook|metaphrase|index))/, "")).join(" ") === "polyverb/index.html casebook/index.html metaphrase/index.html index.html", items.map(a => a.href).join(" "));
+  check("Games menu", items[2].getAttribute("aria-current") === "true" && !items[0].hasAttribute("aria-current"), "Metaphrase isn't marked as the current game");
+  menu.dispatchEvent(new win.KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+  check("Games menu", menu.hidden && brand.getAttribute("aria-expanded") === "false", "Escape doesn't close it");
+  brand.click();
+  doc.body.click();
+  check("Games menu", menu.hidden, "a click elsewhere doesn't close it");
   check("No script errors", errors.length === 0, errors.join("; "));
 }
 
