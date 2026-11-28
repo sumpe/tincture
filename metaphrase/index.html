@@ -21,7 +21,8 @@
 }
 
 main{max-width:540px;margin:0 auto;padding:clamp(40px,9vh,80px) 20px 64px}
-h1{margin:0;font-weight:600;font-size:clamp(2.5rem,10vw,3.4rem);line-height:1.02;letter-spacing:-.015em;text-wrap:balance}
+/* "Piotrek's Metaphrase" is about 9.7 times its size wide: sized to fit on one line, with room for wider fallback fonts */
+h1{margin:0;font-weight:600;font-size:min(2.9rem,calc((100vw - 44px) / 10.6));line-height:1.02;letter-spacing:-.015em;text-wrap:balance}
 .sub{margin:14px 0 0;color:var(--muted);font-style:italic;font-size:1.2rem}
 
 /* The menu board */
