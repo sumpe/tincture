@@ -129,14 +129,37 @@ function identifyForm(typed, question) {
   return matches.slice(0, 2).map(match => ({ ...match, isAskedVerb: match.verb === question.verb }));
 }
 
-// The matches said in Portuguese, "do imperfeito · eu, ele", and in English
-function describeInPortuguese(matches) {
-  return matches.map(match =>
-    (match.isAskedVerb ? "do " : `de ${match.verb}, `) + TENSES_SHORT[match.tense]
-    + " · " + match.persons.map(person => PRONOUNS_SHORT[person]).join(", ")
-  ).join("; ");
+// The matches said in Portuguese, "do imperfeito · eu, ele", with only what doesn't match the question underlined:
+// the verb if it's another one, the tense, the mood and the persons. "do presente do conjuntivo · eu"
+// for an imperfect subjunctive underlines "presente"; for a present indicative, "do conjuntivo".
+// An indicative form given for a subjunctive says "do indicativo", so that difference shows too.
+const TENSE_BASES = ["presente", "perfeito", "imperfeito", "mais-que-perfeito", "futuro", "condicional", "presente", "imperfeito", "futuro"];
+
+function appendDifferences(element, matches, question) {
+  const pieces = []; // [text, differs]
+  matches.forEach((match, k) => {
+    if (k > 0) pieces.push(["; ", false]);
+    if (match.isAskedVerb) pieces.push(["do ", false]);
+    else pieces.push(["de ", false], [match.verb, true], [", ", false]);
+    pieces.push([TENSE_BASES[match.tense], TENSE_BASES[match.tense] !== TENSE_BASES[question.tense]]);
+    if (isSubjunctive(match.tense)) pieces.push([" ", false], ["do conjuntivo", !isSubjunctive(question.tense)]);
+    else if (isSubjunctive(question.tense)) pieces.push([" ", false], ["do indicativo", true]);
+    pieces.push([" · ", false], [match.persons.map(person => PRONOUNS_SHORT[person]).join(", "), !match.persons.includes(question.person)]);
+  });
+  // Two underlined parts with only a space between them are underlined as one: "imperfeito do indicativo"
+  const merged = [];
+  for (const [text, differs] of pieces) {
+    const last = merged[merged.length - 1], beforeLast = merged[merged.length - 2];
+    if (differs && last && last[0] === " " && beforeLast && beforeLast[1]) {
+      merged.pop();
+      beforeLast[0] += " " + text;
+    } else merged.push([text, differs]);
+  }
+  for (const [text, differs] of merged) element.append(differs ? makeElement("span", "off", text) : text);
+  return element;
 }
 
+// And in English, for the hover
 function describeInEnglish(matches) {
   return matches.map(match =>
     (match.isAskedVerb ? "the " : `a form of ${match.verb} (${ENGLISH[match.verb]}), `) + TENSES_SHORT_EN[match.tense]
@@ -335,8 +358,8 @@ function checkAnswer() {
     appendOr(answers, question.answers);
     feedback.append(setText(makeElement("span"), "Resposta", "Answer"), " ", answers);
     if (matches) {
-      const note = setTextMarkingSubjunctive(makeElement("span", "k"), `«${asTyped}» é ` + describeInPortuguese(matches));
-      feedback.append(withEnglish(note, `«${asTyped}» is ` + describeInEnglish(matches)));
+      const note = makeElement("span", "k", `«${asTyped}» é `);
+      feedback.append(withEnglish(appendDifferences(note, matches, question), `«${asTyped}» is ` + describeInEnglish(matches)));
     }
   }
   showScore();
@@ -378,8 +401,7 @@ function addMistakeRows(table, { question, typed, matches }) {
   heading.colSpan = 2;
   heading.scope = "rowgroup";
   body.insertRow().append(heading);
-  const where = setTextMarkingSubjunctive(makeElement("span", "k"),
-    TENSES_SHORT[question.tense] + " · " + PRONOUNS_SHORT[question.person]);
+  const where = makeElement("span", "k", TENSES_SHORT[question.tense] + " · " + PRONOUNS_SHORT[question.person]);
   heading.append(
     withEnglish(makeElement("span", "v", question.verb), ENGLISH[question.verb]),
     withEnglish(where, TENSES_SHORT_EN[question.tense] + " · " + PRONOUNS_SHORT_EN[question.person]));
@@ -388,7 +410,7 @@ function addMistakeRows(table, { question, typed, matches }) {
   typedCell.append(makeElement("span", "no", typed));
   if (matches) {
     typedCell.className = "real";
-    const note = setTextMarkingSubjunctive(makeElement("span", "k"), "é " + describeInPortuguese(matches));
+    const note = appendDifferences(makeElement("span", "k", "é "), matches, question);
     typedCell.append(withEnglish(note, "is " + describeInEnglish(matches)));
   }
   const answerCell = row.insertCell();

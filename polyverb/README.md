@@ -1,4 +1,4 @@
-# Piotrek's Polyverb Tincture
+# Polyverb
 
 Aditz-jokoko ariketak, bakoitza orri bakarrean.
 

@@ -51,8 +51,10 @@
 /* Portuguese specifics */
 .tense.sj{color:var(--honey-tag)}
 .tg.sj td{border-left-color:var(--honey)}
-/* The subjunctive's mark: wherever "conjuntivo" is written, it's underlined in honey */
+/* The subjunctive's mark: wherever a tense is named as "conjuntivo", it's underlined in honey */
 .mood{text-decoration:underline;text-decoration-color:var(--honey);text-decoration-thickness:max(1.5px,.09em);text-underline-offset:.2em;text-decoration-skip-ink:none}
+/* In the notes on a wrong form: the parts that don't match the question, underlined in red */
+.off{text-decoration:underline;text-decoration-color:var(--bad);text-decoration-thickness:max(1.5px,.09em);text-underline-offset:.2em;text-decoration-skip-ink:none}
 .switch{position:relative;display:flex;align-items:center;gap:14px;min-height:50px;padding:8px 0;border-top:1px solid var(--line);line-height:1.35;cursor:pointer}
 .switch+.switch{border-bottom:1px solid var(--line)}
 .switch input{position:absolute;left:0;top:50%;width:44px;height:26px;margin:-13px 0 0;opacity:0;cursor:pointer}
@@ -165,7 +167,7 @@ th.es,td.es{background:var(--col-es)}
     <a class="link back" href="#game" data-en="Back to the game">Voltar ao jogo</a>
   </section>
 </main>
-<footer class="foot">By Peter S</footer>
+<footer class="foot">By Piotrek</footer>
 
 <script src="../js/gloss.js"></script>
 <script src="verbs.js"></script>

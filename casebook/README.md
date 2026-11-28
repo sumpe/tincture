@@ -1,4 +1,4 @@
-# Piotrek's Casebook Tincture
+# Casebook
 
 Substantivtrainer, Geschwister von [Polyverb](../polyverb/) und [Metaphrase](../metaphrase/), jeder auf einer einzigen Seite.
 
