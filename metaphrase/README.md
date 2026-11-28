@@ -1,4 +1,4 @@
-# Piotrek's Metaphrase Tincture
+# Piotrek's Metaphrase
 
 Gêm gyfieithu brawddegau, chwaer i [Polyverb](../polyverb/) a [Casebook](../casebook/), pob iaith ar un dudalen.
 
