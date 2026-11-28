@@ -166,6 +166,13 @@ marks("He drinks coffee in the kitchen.", "pe", "Bebe café na cozinha", true);
 marks("I always forget my umbrella.", "pe", "Esqueço-me sempre do guarda-chuva.", true);
 marks("I always forget my umbrella.", "br", "Eu sempre esqueço o guarda-chuva.", true);
 
+// Every wrong word is explained when the answer is close: a word too many, too few, or swapped
+marks("We decided to sell the car.", "pe", "Decidimos a vender o carro.", false, "«a» está a mais");
+check("Marking: notes", sentenceNotes(find("We decided to sell the car."), "pe").some(([pt]) => pt.startsWith("Decidir vai sem preposição")), "decidir's note");
+marks("I work in a bank.", "pe", "Trabalho banco.", false, "Falta «num»");
+marks("We open the shop at nine o’clock.", "pe", "Abrimos a tenda às nove.", false, "«tenda» → «loja»");
+check("Marking: notes", markAnswer(find("I work in a bank."), "pe", "xyz abc def ghi").notes.length === 0, "an answer nowhere near gets no word-by-word notes");
+
 // Answers the first answer key missed, found on checking it
 marks("I live in a small flat near the beach.", "pe", "Moro num apartamento pequeno perto da praia.", true);
 marks("I lived in London for two years.", "pe", "Morei em Londres dois anos.", true);

@@ -256,12 +256,23 @@ function notesWhenRight({ steps }) {
            `That's right too, but in Portugal it's usually written “${answer.bare}”, with the accent that tells it apart from the present.`]];
 }
 
+// A note for each word that's wrong. When the answer is close, every wrong word gets one, even
+// with nothing more to say than which word, so a word too many or too few is never left unexplained.
 function notesWhenWrong({ steps }, variety, text) {
   const notes = [];
+  const close = steps.filter(step => step.type !== "same").length <= 3;
   for (const step of steps) {
-    const note = step.type === "swap" ? explainSwap(step.typed, step.answer, variety)
-      : step.type === "extra" && isSpanish(step.typed.key) ? [`«${step.typed.bare}» é espanhol.`, `“${step.typed.bare}” is Spanish.`]
-      : null;
+    let note = null;
+    if (step.type === "swap") {
+      const { bare: t } = step.typed, { bare: a } = step.answer;
+      note = explainSwap(step.typed, step.answer, variety) || (close ? [`«${t}» → «${a}».`, `“${t}” → “${a}”.`] : null);
+    } else if (step.type === "extra") {
+      const t = step.typed.bare;
+      note = isSpanish(step.typed.key) ? [`«${t}» é espanhol.`, `“${t}” is Spanish.`]
+        : close ? [`«${t}» está a mais.`, `“${t}” shouldn't be there.`] : null;
+    } else if (step.type === "missing" && close) {
+      note = [`Falta «${step.answer.bare}».`, `“${step.answer.bare}” is missing.`];
+    }
     if (note && !notes.some(([pt]) => pt === note[0])) notes.push(note);
   }
   if (MACRON.test(text)) notes.push(["ā é um mácron. O português usa o til: ã, õ.", "ā is a macron. Portuguese uses the tilde: ã, õ."]);
@@ -289,7 +300,7 @@ function explainSwap(typed, answer, variety) {
   if (answer.verb && /[aei]rem$/.test(tk) && ak === tk.replace(/rem$/, "ram")) {
     return [`«${t}» é o infinitivo pessoal; o pretérito é «${a}».`, `“${t}” is the personal infinitive; the preterite is “${a}”.`];
   }
-  if (answer.verb) return [`${swap}: vê outra vez a pessoa e o tempo do verbo.`, `${swapEn}: check the verb's person and tense again.`];
+  if (answer.verb && looksAlike(tk, ak)) return [`${swap}: vê outra vez a pessoa e o tempo do verbo.`, `${swapEn}: check the verb's person and tense again.`];
   if (letterDistance(tk, ak) === 1) return [`${swap}: uma letra.`, `${swapEn}: one letter.`];
   return null;
 }
